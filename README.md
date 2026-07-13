@@ -15,6 +15,7 @@
 - `src/`：React/Vite Web 设计原型。
 - `miniapp/`：Taro 4.2.0 微信小程序源码。
 - `docs/`：产品设计与实现计划。
+- `docs/images/prototypes/`：原型截图与视觉对比图。
 
 ## 微信小程序运行
 
