@@ -10,3 +10,4 @@ miniapp/dist-test/
 .npmrc
 .superpowers/
 miniapp/.swc/
+.vite/
