@@ -1,0 +1,35 @@
+{
+  "name": "zhu-li-weapp",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev:weapp": "taro build --type weapp --watch",
+    "build:weapp": "taro build --type weapp",
+    "test:compile": "tsc -p tsconfig.test.json",
+    "test": "npm run test:compile && node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "@tarojs/components": "4.2.0",
+    "@tarojs/helper": "4.2.0",
+    "@tarojs/plugin-framework-react": "4.2.0",
+    "@tarojs/plugin-platform-weapp": "4.2.0",
+    "@tarojs/react": "4.2.0",
+    "@tarojs/runtime": "4.2.0",
+    "@tarojs/shared": "4.2.0",
+    "@tarojs/taro": "4.2.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@tarojs/cli": "4.2.0",
+    "@tarojs/webpack5-runner": "4.2.0",
+    "@babel/preset-react": "7.24.1",
+    "@types/react": "18.3.28",
+    "@types/webpack-env": "1.18.8",
+    "babel-preset-taro": "4.2.0",
+    "react-refresh": "0.14.0",
+    "sass": "1.89.2",
+    "typescript": "5.8.3",
+    "webpack": "5.91.0"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "appid": "wxcbad07e3fb2b6b8e",
+  "projectname": "铸力健身记录",
+  "description": "力量训练与综合运动记录",
+  "compileType": "miniprogram",
+  "miniprogramRoot": "dist/",
+  "setting": {
+    "es6": true,
+    "minified": true,
+    "postcss": true,
+    "urlCheck": false
+  }
+}

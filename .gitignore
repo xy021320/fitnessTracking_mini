@@ -1,0 +1,12 @@
+node_modules/
+dist/
+miniapp/node_modules/
+miniapp/dist/
+miniapp/dist-test/
+.DS_Store
+*.log
+.taro/
+.taro4.0/
+.npmrc
+.superpowers/
+miniapp/.swc/
