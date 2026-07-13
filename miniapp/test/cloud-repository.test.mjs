@@ -1,0 +1,53 @@
+import assert from 'node:assert/strict'
+import { createRequire } from 'node:module'
+import test from 'node:test'
+
+const require = createRequire(import.meta.url)
+const { toSessionDocument, fromSessionDocument } = require('../dist-test/cloud/mappers.js')
+const { createCloudRepository } = require('../dist-test/cloud/repository.js')
+
+const session = {
+  id: 'session-client-1', date: '2026-07-13', duration: 30,
+  entries: [{ id: 'bench', name: '卧推', category: 'strength', custom: false, metrics: ['weight', 'reps', 'sets'], sets: [
+    { weight: 80, reps: 8, completed: true },
+    { weight: 90, reps: 5, completed: false }
+  ] }]
+}
+
+test('session documents contain summaries and client identity', () => {
+  const doc = toSessionDocument(session, 123)
+  assert.equal(doc.clientSessionId, session.id)
+  assert.equal(doc.summary.totalVolume, 640)
+  assert.equal(doc.summary.completedSets, 1)
+  assert.equal(doc.schemaVersion, 1)
+  assert.equal(fromSessionDocument({ ...doc, _id: 'cloud-1' }).id, session.id)
+})
+
+test('repository queries only the current user and paginates by 20', async () => {
+  const calls = []
+  const adapter = {
+    callFunction: async () => ({ result: { user: { id: 'u1', nickname: '微信用户' } } }),
+    list: async (collection, where, options) => { calls.push({ collection, where, options }); return [] },
+    findOne: async () => null,
+    add: async () => ({ id: 'new' }), update: async () => undefined,
+    serverDate: () => ({ $date: true })
+  }
+  const repository = createCloudRepository(adapter)
+  await repository.listSessions({ since: 1000 })
+  assert.deepEqual(calls[0], {
+    collection: 'workout_sessions',
+    where: { _openid: '{openid}', updatedAt: { $gt: 1000 }, deletedAt: null },
+    options: { limit: 20, orderBy: ['updatedAt', 'desc'] }
+  })
+})
+
+test('repository de-duplicates sessions by clientSessionId', async () => {
+  let adds = 0
+  const adapter = {
+    callFunction: async () => ({ result: {} }), list: async () => [],
+    findOne: async () => ({ _id: 'existing' }), add: async () => { adds += 1 },
+    update: async () => undefined, serverDate: () => 123
+  }
+  await createCloudRepository(adapter).saveSession(session)
+  assert.equal(adds, 0)
+})

@@ -6,5 +6,5 @@
     "rootDir": "src",
     "noEmit": false
   },
-  "include": ["src/domain/**/*.ts", "src/store/reducer.ts", "src/store/storage.ts"]
+  "include": ["src/domain/**/*.ts", "src/cloud/**/*.ts", "src/auth/**/*.ts", "src/store/reducer.ts", "src/store/storage.ts"]
 }
