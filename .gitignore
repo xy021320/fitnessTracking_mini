@@ -10,3 +10,5 @@ miniapp/dist-test/
 .npmrc
 .superpowers/
 miniapp/.swc/
+.vite/
+miniapp/project.private.config.json

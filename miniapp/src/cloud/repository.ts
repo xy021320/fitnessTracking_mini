@@ -5,6 +5,16 @@ import type { CloudAdapter, CloudRepository, CloudUser, ExerciseDocument, Sessio
 const owner = { _openid: '{openid}' }
 
 export function createCloudRepository(adapter: CloudAdapter): CloudRepository {
+  const listAll = async (collection: string, where: Record<string, unknown>) => {
+    const all: Record<string, any>[] = []
+    const limit = 20
+    while (true) {
+      const page = await adapter.list(collection, where, { limit, skip: all.length, orderBy: ['updatedAt', 'desc'] })
+      all.push(...page)
+      if (page.length < limit) return all
+    }
+  }
+
   return {
     async bootstrapUser() {
       const response = await adapter.callFunction('bootstrapUser')
@@ -23,7 +33,7 @@ export function createCloudRepository(adapter: CloudAdapter): CloudRepository {
     async listExercises(options = {}) {
       const where: Record<string, unknown> = { ...owner, deletedAt: null }
       if (options.since) where.updatedAt = { $gt: options.since }
-      const docs = await adapter.list('exercise_library', where, { limit: 20, orderBy: ['updatedAt', 'desc'] })
+      const docs = await listAll('exercise_library', where)
       return docs.map((doc) => fromExerciseDocument(doc as ExerciseDocument))
     },
     async saveExercise(exercise) {
@@ -35,7 +45,7 @@ export function createCloudRepository(adapter: CloudAdapter): CloudRepository {
     async listSessions(options = {}) {
       const where: Record<string, unknown> = { ...owner, deletedAt: null }
       if (options.since) where.updatedAt = { $gt: options.since }
-      const docs = await adapter.list('workout_sessions', where, { limit: 20, orderBy: ['updatedAt', 'desc'] })
+      const docs = await listAll('workout_sessions', where)
       return docs.map((doc) => fromSessionDocument(doc as SessionDocument))
     },
     async saveSession(session) {

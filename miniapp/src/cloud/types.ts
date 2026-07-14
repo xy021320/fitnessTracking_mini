@@ -34,7 +34,7 @@ export interface ExerciseDocument extends ExerciseDefinition {
 
 export interface CloudAdapter {
   callFunction(name: string, data?: Record<string, unknown>): Promise<{ result?: unknown }>
-  list(collection: string, where: Record<string, unknown>, options: { limit: number; orderBy: [string, 'asc' | 'desc'] }): Promise<Record<string, any>[]>
+  list(collection: string, where: Record<string, unknown>, options: { limit: number; skip: number; orderBy: [string, 'asc' | 'desc'] }): Promise<Record<string, any>[]>
   findOne(collection: string, where: Record<string, unknown>): Promise<Record<string, any> | null>
   add(collection: string, data: Record<string, unknown>): Promise<{ id?: string }>
   update(collection: string, id: string, data: Record<string, unknown>): Promise<void>

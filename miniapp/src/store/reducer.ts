@@ -1,6 +1,6 @@
 import { sanitizeNumber } from '../domain/exercises'
 import { buildSession } from '../domain/sessions'
-import type { AppState, ExerciseDefinition, MetricKey } from '../domain/types'
+import type { AppState, ExerciseDefinition, MetricKey, WorkoutSession } from '../domain/types'
 
 export type AppAction =
   | { type: 'START_WORKOUT' }
@@ -10,8 +10,9 @@ export type AppAction =
   | { type: 'ADD_SET'; exerciseId: string }
   | { type: 'UPDATE_SET'; exerciseId: string; setIndex: number; field: 'weight' | 'reps'; value: number }
   | { type: 'COMPLETE_SET'; exerciseId: string; setIndex: number }
-  | { type: 'COMPLETE_WORKOUT'; date: string; duration: number }
+  | { type: 'COMPLETE_WORKOUT'; date: string; duration: number; session?: WorkoutSession }
   | { type: 'UPDATE_PREFERENCES'; weeklyGoal: number }
+  | { type: 'HYDRATE'; state: AppState }
 
 export function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
@@ -49,12 +50,14 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         ? { ...exercise, sets: (exercise.sets ?? []).map((set, index) => index === action.setIndex ? { ...set, completed: !set.completed } : set) }
         : exercise) }
     case 'COMPLETE_WORKOUT': {
-      const session = buildSession(state, action.date, action.duration)
+      const session = action.session ?? buildSession(state, action.date, action.duration)
       if (session.entries.length === 0) return state
       return { ...state, activeTab: 'data', workoutStarted: false, sessions: [...state.sessions, session] }
     }
     case 'UPDATE_PREFERENCES':
       return { ...state, preferences: { ...state.preferences, weeklyGoal: Math.max(1, Math.round(action.weeklyGoal)) } }
+    case 'HYDRATE':
+      return action.state
     default:
       return state
   }

@@ -5,8 +5,9 @@ let initialized = false
 
 export function initCloud(): void {
   if (initialized) return
-  const env = process.env.TARO_APP_CLOUD_ENV
-  Taro.cloud.init({ ...(env ? { env } : {}), traceUser: true })
+  // Omitting env lets WeChat use the environment associated with this AppID.
+  // This avoids embedding a machine-specific environment ID in source control.
+  Taro.cloud.init({ traceUser: true })
   initialized = true
 }
 
@@ -21,7 +22,7 @@ export function createTaroCloudAdapter(): CloudAdapter {
   return {
     callFunction: (name, data) => Taro.cloud.callFunction({ name, data }) as Promise<{ result?: unknown }>,
     async list(collection, where, options) {
-      const result = await db.collection(collection).where(normalize(where)).orderBy(options.orderBy[0], options.orderBy[1]).limit(options.limit).get()
+      const result = await db.collection(collection).where(normalize(where)).orderBy(options.orderBy[0], options.orderBy[1]).skip(options.skip).limit(options.limit).get()
       return result.data as Record<string, any>[]
     },
     async findOne(collection, where) {

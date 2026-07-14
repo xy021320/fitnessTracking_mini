@@ -11,14 +11,14 @@
 - 登录身份由微信云开发自动建立，用户无需账号密码。
 - 昵称和头像是可选资料；拒绝授权不影响训练记录功能。
 - 云端为登录后的主数据源，本地缓存负责启动速度、训练草稿和离线重试。
-- 免费体验环境关闭按量付费，并在控制台设置 70% 与 90% 用量提醒。
+- 首次使用个人版免费试用 1 个月，关闭自动续费并设置用量提醒；试用到期后不付费时继续保留本地记录和待同步队列。
 - 不接入独立 CloudBase Auth SDK、Supabase、自建 API 服务器或云托管。
 
 ## 运行配置
 
 - 小程序 AppID：`wxcbad07e3fb2b6b8e`。
-- 云环境通过 `TARO_APP_CLOUD_ENV` 配置；未提供时使用微信开发者工具当前关联环境。
-- 应用启动调用 `Taro.cloud.init({ env, traceUser: true })`。
+- 云环境使用微信开发者工具当前与 AppID 关联的默认环境，不把机器专属环境 ID 写入仓库。
+- 应用启动调用 `Taro.cloud.init({ traceUser: true })`。
 - 不在前端、仓库或环境文件中保存 AppSecret。
 - 微信开发者工具生成的 `project.private.config.json` 仅用于本机，不提交仓库。
 
@@ -157,7 +157,7 @@
 
 ## 云端资源
 
-- 一个微信云开发免费体验环境。
+- 一个微信云开发个人版环境；首次使用按当前官方政策可免费试用 1 个月，之后是否付费由用户决定。
 - 三个数据库集合：`users`、`exercise_library`、`workout_sessions`。
 - 一个云函数：`bootstrapUser`，Node.js 运行时，3 秒以内完成。
 - 一个头像目录：`avatars/{openid-hash}/`，不在公开 URL 中暴露 OpenID。

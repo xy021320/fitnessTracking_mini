@@ -1,0 +1,10 @@
+{
+  "exercise_library": [
+    { "name": "owner_client_exercise", "fields": [{ "field": "_openid", "order": "asc" }, { "field": "clientExerciseId", "order": "asc" }] },
+    { "name": "owner_updated_exercise", "fields": [{ "field": "_openid", "order": "asc" }, { "field": "updatedAt", "order": "desc" }] }
+  ],
+  "workout_sessions": [
+    { "name": "owner_client_session", "fields": [{ "field": "_openid", "order": "asc" }, { "field": "clientSessionId", "order": "asc" }] },
+    { "name": "owner_updated_session", "fields": [{ "field": "_openid", "order": "asc" }, { "field": "updatedAt", "order": "desc" }] }
+  ]
+}

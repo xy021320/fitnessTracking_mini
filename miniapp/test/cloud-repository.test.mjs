@@ -37,8 +37,23 @@ test('repository queries only the current user and paginates by 20', async () =>
   assert.deepEqual(calls[0], {
     collection: 'workout_sessions',
     where: { _openid: '{openid}', updatedAt: { $gt: 1000 }, deletedAt: null },
-    options: { limit: 20, orderBy: ['updatedAt', 'desc'] }
+    options: { limit: 20, skip: 0, orderBy: ['updatedAt', 'desc'] }
   })
+})
+
+test('repository loads every 20-document page', async () => {
+  const calls = []
+  const docs = Array.from({ length: 20 }, (_, index) => ({
+    clientSessionId: `s-${index}`, date: '2026-07-13', duration: 1, entries: []
+  }))
+  const adapter = {
+    callFunction: async () => ({ result: {} }),
+    list: async (_collection, _where, options) => { calls.push(options); return options.skip === 0 ? docs : [] },
+    findOne: async () => null, add: async () => ({}), update: async () => undefined, serverDate: () => 1
+  }
+  const sessions = await createCloudRepository(adapter).listSessions()
+  assert.equal(sessions.length, 20)
+  assert.deepEqual(calls.map((call) => call.skip), [0, 20])
 })
 
 test('repository de-duplicates sessions by clientSessionId', async () => {

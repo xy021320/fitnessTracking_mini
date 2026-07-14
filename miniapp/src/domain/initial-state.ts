@@ -33,3 +33,16 @@ export const initialAppState: AppState = {
   ],
   preferences: { weightUnit: 'kg', distanceUnit: 'km', weeklyGoal: 4 }
 }
+
+export function createEmptyUserState(): AppState {
+  return {
+    activeTab: 'home',
+    workoutStarted: false,
+    exerciseLibrary: presetExercises.map((exercise) => ({ ...exercise, metrics: [...exercise.metrics] })),
+    currentExercises: [
+      { ...presetExercises[0], metrics: [...presetExercises[0].metrics], sets: [{ weight: 0, reps: 0, completed: false }] }
+    ],
+    sessions: [],
+    preferences: { weightUnit: 'kg', distanceUnit: 'km', weeklyGoal: 4 }
+  }
+}

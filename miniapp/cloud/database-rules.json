@@ -1,0 +1,20 @@
+{
+  "users": {
+    "read": "auth.openid == resource._openid",
+    "create": false,
+    "update": "auth.openid == resource._openid && auth.openid == request.resource._openid",
+    "delete": false
+  },
+  "exercise_library": {
+    "read": "auth.openid == resource._openid",
+    "create": "auth.openid == request.resource._openid",
+    "update": "auth.openid == resource._openid && auth.openid == request.resource._openid",
+    "delete": "auth.openid == resource._openid"
+  },
+  "workout_sessions": {
+    "read": "auth.openid == resource._openid",
+    "create": "auth.openid == request.resource._openid",
+    "update": "auth.openid == resource._openid && auth.openid == request.resource._openid",
+    "delete": "auth.openid == resource._openid"
+  }
+}

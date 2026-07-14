@@ -1,6 +1,7 @@
 import type { AppState } from '../domain/types'
 
 export const STORAGE_KEY = 'zhu-li-app-state-v1'
+const USER_STORAGE_PREFIX = 'zhu-li-user-state-v1:'
 
 interface StorageReader { getStorageSync: (key: string) => unknown }
 interface StorageWriter { setStorageSync: (key: string, value: unknown) => void }
@@ -25,5 +26,22 @@ export function saveState(storage: StorageWriter, state: AppState): void {
     storage.setStorageSync(STORAGE_KEY, state)
   } catch {
     // Keep the in-memory state usable when device storage is unavailable.
+  }
+}
+
+export function loadUserState(storage: StorageReader, userId: string, fallback: AppState): AppState {
+  try {
+    const value = storage.getStorageSync(`${USER_STORAGE_PREFIX}${userId}`)
+    return isAppState(value) ? { ...fallback, ...value } : fallback
+  } catch {
+    return fallback
+  }
+}
+
+export function saveUserState(storage: StorageWriter, userId: string, state: AppState): void {
+  try {
+    storage.setStorageSync(`${USER_STORAGE_PREFIX}${userId}`, state)
+  } catch {
+    // Cloud sync remains the source of truth when local storage is unavailable.
   }
 }

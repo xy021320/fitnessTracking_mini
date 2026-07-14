@@ -16,3 +16,12 @@ test('four confirmed pages expose their primary content', () => {
   assert.match(read('src/pages/data/index.tsx'), /总训练量|总距离/)
   assert.match(read('src/pages/profile/index.tsx'), /训练目标|单位偏好|自定义项目/)
 })
+
+test('login gate and first-training empty state are present', () => {
+  const auth = read('src/components/auth-gate/index.tsx')
+  assert.match(auth, /微信登录/)
+  assert.match(auth, /训练数据仅本人可见/)
+  assert.match(auth, /重新尝试/)
+  assert.match(read('src/pages/home/index.tsx'), /开始第一次训练/)
+  assert.doesNotMatch(read('src/pages/home/index.tsx'), /7月 · 第3周/)
+})

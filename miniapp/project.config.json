@@ -4,6 +4,7 @@
   "description": "力量训练与综合运动记录",
   "compileType": "miniprogram",
   "miniprogramRoot": "dist/",
+  "cloudfunctionRoot": "cloudfunctions/",
   "setting": {
     "es6": true,
     "minified": true,
