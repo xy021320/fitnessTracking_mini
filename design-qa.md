@@ -5,20 +5,20 @@
 ### Training
 
 - Source visual truth: `/Users/zhaoxuezhi/.codex/generated_images/019f5998-76a8-7890-bcb3-5cd0fa360ccb/exec-fb0fd64a-d638-4cf9-a797-186df8716b10.png`
-- Implementation screenshot: `/Users/zhaoxuezhi/Documents/demo/fitness-log-miniapp/artifacts-training-no-rest-bar-final.png`
-- Combined comparison: `/Users/zhaoxuezhi/Documents/demo/fitness-log-miniapp/artifacts-comparison-training-no-rest-bar.png`
+- Implementation screenshot: `docs/images/prototypes/artifacts-training-no-rest-bar-final.png`
+- Combined comparison: `docs/images/prototypes/artifacts-comparison-training-no-rest-bar.png`
 - State: 推力 A，两个力量动作，2 组完成；用户指定移除休息计时栏。
 
 ### Analytics
 
 - Source visual truth: `/Users/zhaoxuezhi/.codex/generated_images/019f5998-76a8-7890-bcb3-5cd0fa360ccb/exec-ad37844c-c2ca-4765-b94d-80274bc3b1d2.png`
-- Implementation screenshot: `/Users/zhaoxuezhi/Documents/demo/fitness-log-miniapp/artifacts-data-390x844-v1.png`
-- Combined comparison: `/Users/zhaoxuezhi/Documents/demo/fitness-log-miniapp/artifacts-comparison-data.png`
+- Implementation screenshot: `docs/images/prototypes/artifacts-data-390x844-v1.png`
+- Combined comparison: `docs/images/prototypes/artifacts-comparison-data.png`
 - State: 完成包含 5.2 km、31 分钟户外跑步的训练后，总览统计更新。
 
 ### Profile
 
-- Implementation screenshot: `/Users/zhaoxuezhi/Documents/demo/fitness-log-miniapp/artifacts-profile-390x844-v1.png`
+- Implementation screenshot: `docs/images/prototypes/artifacts-profile-390x844-v1.png`
 - Design source: approved dark brand system from option 1 plus the user-requested mainstream personal-management structure.
 
 All screenshots use the Codex in-app Browser at `http://127.0.0.1:4173/` with a 390 × 844 viewport.
@@ -51,13 +51,13 @@ Focused crops were not required: both normalized comparisons keep each 390 px sc
 
 - [P2] Initial implementation showed only one exercise and lacked the fixed rest strip, leaving excessive empty space compared with option 2.
 - Fix: added a second seeded strength exercise, exact per-exercise set completion, and the fixed `休息 01:24 / 跳过` bar.
-- Post-fix evidence: `artifacts-comparison-training-final.png` shows the restored density and footer anatomy.
+- Post-fix evidence: `docs/images/prototypes/artifacts-comparison-training-final.png` shows the restored density and footer anatomy.
 
 ### User annotation pass
 
 - User marked the entire `休息 01:24 / 跳过` fixed bar for removal.
 - Fix: removed the bar markup and styles, reduced training-screen bottom padding from 154 px to 102 px, and kept the primary navigation directly below the training content.
-- Post-fix evidence: `artifacts-training-no-rest-bar-final.png`; DOM checks found zero exact `休息` labels and zero `跳过` buttons.
+- Post-fix evidence: `docs/images/prototypes/artifacts-training-no-rest-bar-final.png`; DOM checks found zero exact `休息` labels and zero `跳过` buttons.
 
 ### Analytics pass 1
 
