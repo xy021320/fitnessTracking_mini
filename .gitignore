@@ -1,14 +1,42 @@
+# Dependencies and generated output (applies at every directory level)
 node_modules/
 dist/
-miniapp/node_modules/
-miniapp/dist/
-miniapp/dist-test/
-.DS_Store
-*.log
+dist-test/
+coverage/
+miniprogram_npm/
+*.tsbuildinfo
+
+# Framework and compiler caches
+.vite/
 .taro/
 .taro4.0/
+.swc/
+.cache/
+
+# WeChat DevTools local-only settings
+project.private.config.json
+
+# Local environment and package-manager settings
+.env
+.env.*
+!.env.example
 .npmrc
+*.local
+
+# Editor and operating-system files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs and temporary test output
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Local agent workflow state
 .superpowers/
-miniapp/.swc/
-.vite/
-miniapp/project.private.config.json
