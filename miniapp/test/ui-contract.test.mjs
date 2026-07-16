@@ -57,3 +57,11 @@ test('both training actions share the fixed action bar', () => {
   assert.match(actions, /完成训练/)
   assert.match(read('src/pages/training/index.scss'), /--training-action-height/)
 })
+
+test('profile editing uses explicit WeChat nickname and avatar controls', () => {
+  const editor = read('src/components/profile-editor/index.tsx')
+  assert.match(editor, /type='nickname'/)
+  assert.match(editor, /openType='chooseAvatar'/)
+  assert.match(editor, /cloud\.uploadFile/)
+  assert.match(read('src/pages/profile/index.tsx'), /完善资料/)
+})
