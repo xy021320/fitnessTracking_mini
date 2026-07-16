@@ -10,6 +10,7 @@ export type AppAction =
   | { type: 'ADD_SET'; exerciseId: string }
   | { type: 'UPDATE_SET'; exerciseId: string; setIndex: number; field: 'weight' | 'reps'; value: number }
   | { type: 'COMPLETE_SET'; exerciseId: string; setIndex: number }
+  | { type: 'TOGGLE_EXERCISE_COMPLETE'; exerciseId: string }
   | { type: 'REMOVE_EXERCISE'; exerciseId: string }
   | { type: 'COMPLETE_WORKOUT'; date: string; duration: number; session?: WorkoutSession }
   | { type: 'UPDATE_PREFERENCES'; weeklyGoal: number }
@@ -35,7 +36,7 @@ export function appReducer(state: AppState, action: AppAction): AppState {
           ...action.exercise,
           ...(action.exercise.metrics.includes('sets') && action.exercise.metrics.includes('reps')
             ? { sets: [{ weight: 0, reps: 0, completed: false }] }
-            : { values: {} })
+            : { values: {}, completed: false })
         }]
       }
     }
@@ -54,6 +55,10 @@ export function appReducer(state: AppState, action: AppAction): AppState {
     case 'COMPLETE_SET':
       return { ...state, currentExercises: state.currentExercises.map((exercise) => exercise.id === action.exerciseId
         ? { ...exercise, sets: (exercise.sets ?? []).map((set, index) => index === action.setIndex ? { ...set, completed: !set.completed } : set) }
+        : exercise) }
+    case 'TOGGLE_EXERCISE_COMPLETE':
+      return { ...state, currentExercises: state.currentExercises.map((exercise) => exercise.id === action.exerciseId && !exercise.sets
+        ? { ...exercise, completed: !exercise.completed }
         : exercise) }
     case 'REMOVE_EXERCISE':
       return { ...state, currentExercises: state.currentExercises.filter((exercise) => exercise.id !== action.exerciseId) }

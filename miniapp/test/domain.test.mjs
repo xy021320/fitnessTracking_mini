@@ -29,8 +29,17 @@ test('analytics only counts completed values', () => {
 
 test('session builder keeps completed entries as snapshots', () => {
   const session = buildSession({ currentExercises: [
-    { id: 'rope', name: '跳绳', category: 'cardio', metrics: ['reps', 'duration'], custom: false, values: { reps: 600, duration: 8 } }
+    { id: 'rope', name: '跳绳', category: 'cardio', metrics: ['reps', 'duration'], custom: false, values: { reps: 600, duration: 8 }, completed: true }
   ] }, '2026-07-13', 18)
   assert.equal(session.entries[0].reps, 600)
   assert.equal(session.duration, 18)
+})
+
+test('session excludes unfinished value-based exercises', () => {
+  const exercise = {
+    id: 'run', name: '跑步', category: 'cardio', metrics: ['distance'], custom: true,
+    values: { distance: 5 }, completed: false
+  }
+  assert.equal(buildSession({ currentExercises: [exercise] }, '2026-07-16', 30).entries.length, 0)
+  assert.equal(buildSession({ currentExercises: [{ ...exercise, completed: true }] }, '2026-07-16', 30).entries.length, 1)
 })

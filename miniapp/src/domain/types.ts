@@ -18,6 +18,7 @@ export interface ExerciseSet {
 export interface CurrentExercise extends ExerciseDefinition {
   sets?: ExerciseSet[]
   values?: Partial<Record<MetricKey, number>>
+  completed?: boolean
 }
 
 export interface WorkoutEntry extends ExerciseDefinition {

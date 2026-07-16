@@ -55,3 +55,14 @@ test('removing an exercise keeps the timer and exercise library', () => {
   assert.equal(next.exerciseLibrary.some((item) => item.id === exerciseId), true)
   assert.equal(next.workoutStartedAt, 1_000)
 })
+
+test('value-based exercise completion can be toggled', () => {
+  const state = appReducer(createEmptyUserState(), {
+    type: 'ADD_EXERCISE',
+    exercise: { id: 'run', name: '跑步', category: 'cardio', metrics: ['distance', 'duration'], custom: true }
+  })
+  const done = appReducer(state, { type: 'TOGGLE_EXERCISE_COMPLETE', exerciseId: 'run' })
+  assert.equal(done.currentExercises.find((item) => item.id === 'run').completed, true)
+  const undone = appReducer(done, { type: 'TOGGLE_EXERCISE_COMPLETE', exerciseId: 'run' })
+  assert.equal(undone.currentExercises.find((item) => item.id === 'run').completed, false)
+})

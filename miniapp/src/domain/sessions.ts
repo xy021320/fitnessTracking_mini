@@ -4,7 +4,8 @@ import type { CurrentExercise, WorkoutEntry, WorkoutSession } from './types'
 function toEntry(exercise: CurrentExercise): WorkoutEntry | null {
   const completedSets = (exercise.sets ?? []).filter((set) => set.completed)
   const values = exercise.values ?? {}
-  const hasValues = exercise.metrics.some((metric) => metric !== 'sets' && sanitizeNumber(values[metric]) > 0)
+  const hasValues = exercise.completed === true
+    && exercise.metrics.some((metric) => metric !== 'sets' && sanitizeNumber(values[metric]) > 0)
   if (completedSets.length === 0 && !hasValues) return null
   return {
     id: exercise.id, name: exercise.name, category: exercise.category,
