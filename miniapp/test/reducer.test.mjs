@@ -74,3 +74,18 @@ test('preferences can update goal and units together', () => {
   })
   assert.deepEqual(next.preferences, { weeklyGoal: 6, weightUnit: 'lb', distanceUnit: 'mi' })
 })
+
+test('deleting a library exercise preserves current draft and history', () => {
+  const custom = { id: 'custom-1', name: '划船机', category: 'custom', metrics: ['duration'], custom: true }
+  const empty = createEmptyUserState()
+  const base = {
+    ...empty,
+    exerciseLibrary: [...empty.exerciseLibrary, custom],
+    currentExercises: [{ ...custom, values: { duration: 10 }, completed: true }],
+    sessions: [{ id: 's1', date: '2026-07-16', duration: 10, entries: [{ ...custom, duration: 10 }] }]
+  }
+  const next = appReducer(base, { type: 'DELETE_LIBRARY_EXERCISE', exerciseId: custom.id })
+  assert.equal(next.exerciseLibrary.some((item) => item.id === custom.id), false)
+  assert.equal(next.currentExercises.length, 1)
+  assert.equal(next.sessions[0].entries.length, 1)
+})

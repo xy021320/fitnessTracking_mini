@@ -42,6 +42,12 @@ export function createCloudRepository(adapter: CloudAdapter): CloudRepository {
       if (existing?._id) await adapter.update('exercise_library', existing._id, { ...toExerciseDocument(exercise, now), createdAt: existing.createdAt })
       else await adapter.add('exercise_library', toExerciseDocument(exercise, now) as unknown as Record<string, unknown>)
     },
+    async deleteExercise(exerciseId) {
+      const existing = await adapter.findOne('exercise_library', { ...owner, clientExerciseId: exerciseId })
+      if (!existing?._id) return
+      const now = adapter.serverDate()
+      await adapter.update('exercise_library', existing._id, { deletedAt: now, updatedAt: now })
+    },
     async listSessions(options = {}) {
       const where: Record<string, unknown> = { ...owner, deletedAt: null }
       if (options.since) where.updatedAt = { $gt: options.since }

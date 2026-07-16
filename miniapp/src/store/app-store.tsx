@@ -67,9 +67,13 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
       return
     }
     baseDispatch(action)
-    if (action.type === 'ADD_EXERCISE') void syncEngine?.pushExercise(action.exercise).then((synced) => {
+    if (action.type === 'ADD_EXERCISE' || action.type === 'SAVE_LIBRARY_EXERCISE') void syncEngine?.pushExercise(action.exercise).then((synced) => {
       if (synced) auth.markSynced()
       else auth.markOffline('项目已保存在本机，将在网络恢复后自动同步')
+    })
+    if (action.type === 'DELETE_LIBRARY_EXERCISE') void syncEngine?.pushExerciseDelete(action.exerciseId).then((synced) => {
+      if (synced) auth.markSynced()
+      else auth.markOffline('项目已从本机移除，云端将在网络恢复后同步')
     })
   }, [state, syncEngine, auth])
 

@@ -17,3 +17,9 @@ test('all native tabs have default and selected icons', () => {
     assert.equal(existsSync(new URL(`../src/assets/tabbar/${name}-active.png`, import.meta.url)), true)
   }
 })
+
+test('secondary profile pages are registered', () => {
+  const config = readFileSync(new URL('../src/app.config.ts', import.meta.url), 'utf8')
+  assert.match(config, /pages\/custom-projects\/index/)
+  assert.match(config, /pages\/privacy\/index/)
+})

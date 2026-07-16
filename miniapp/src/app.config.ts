@@ -3,7 +3,9 @@ export default defineAppConfig({
     'pages/home/index',
     'pages/training/index',
     'pages/data/index',
-    'pages/profile/index'
+    'pages/profile/index',
+    'pages/custom-projects/index',
+    'pages/privacy/index'
   ],
   window: {
     backgroundTextStyle: 'light',

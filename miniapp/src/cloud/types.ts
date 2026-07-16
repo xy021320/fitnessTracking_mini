@@ -47,6 +47,7 @@ export interface CloudRepository {
   updateProfile(userId: string, data: Partial<Pick<CloudUser, 'nickname' | 'avatarFileId' | 'preferences'>>): Promise<void>
   listExercises(options?: { since?: number }): Promise<ExerciseDefinition[]>
   saveExercise(exercise: ExerciseDefinition): Promise<void>
+  deleteExercise(exerciseId: string): Promise<void>
   listSessions(options?: { since?: number }): Promise<WorkoutSession[]>
   saveSession(session: WorkoutSession): Promise<void>
 }

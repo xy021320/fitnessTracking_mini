@@ -66,3 +66,16 @@ test('repository de-duplicates sessions by clientSessionId', async () => {
   await createCloudRepository(adapter).saveSession(session)
   assert.equal(adds, 0)
 })
+
+test('repository soft deletes an exercise document', async () => {
+  const updates = []
+  const adapter = {
+    callFunction: async () => ({ result: {} }), list: async () => [],
+    findOne: async () => ({ _id: 'cloud-exercise' }),
+    add: async () => ({}),
+    update: async (...args) => { updates.push(args) },
+    serverDate: () => 123
+  }
+  await createCloudRepository(adapter).deleteExercise('custom-1')
+  assert.deepEqual(updates[0], ['exercise_library', 'cloud-exercise', { deletedAt: 123, updatedAt: 123 }])
+})

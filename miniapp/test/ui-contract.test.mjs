@@ -72,3 +72,12 @@ test('profile menu rows have click actions', () => {
   assert.match(source, /navigateTo/)
   assert.match(source, /训练提醒功能需要/)
 })
+
+test('profile secondary pages expose project management and privacy content', () => {
+  const projects = read('src/pages/custom-projects/index.tsx')
+  const privacy = read('src/pages/privacy/index.tsx')
+  assert.match(projects, /自定义项目/)
+  assert.match(projects, /DELETE_LIBRARY_EXERCISE/)
+  assert.match(privacy, /身份与可见范围/)
+  assert.match(privacy, /云端保存内容/)
+})

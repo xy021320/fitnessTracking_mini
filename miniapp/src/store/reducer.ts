@@ -6,6 +6,8 @@ export type AppAction =
   | { type: 'START_WORKOUT'; startedAt: number }
   | { type: 'SELECT_TAB'; tab: AppState['activeTab'] }
   | { type: 'ADD_EXERCISE'; exercise: ExerciseDefinition }
+  | { type: 'SAVE_LIBRARY_EXERCISE'; exercise: ExerciseDefinition }
+  | { type: 'DELETE_LIBRARY_EXERCISE'; exerciseId: string }
   | { type: 'UPDATE_ENTRY_VALUE'; exerciseId: string; metric: MetricKey; value: number }
   | { type: 'ADD_SET'; exerciseId: string }
   | { type: 'UPDATE_SET'; exerciseId: string; setIndex: number; field: 'weight' | 'reps'; value: number }
@@ -40,6 +42,17 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         }]
       }
     }
+    case 'SAVE_LIBRARY_EXERCISE': {
+      const exists = state.exerciseLibrary.some((item) => item.id === action.exercise.id)
+      return {
+        ...state,
+        exerciseLibrary: exists
+          ? state.exerciseLibrary.map((item) => item.id === action.exercise.id ? action.exercise : item)
+          : [...state.exerciseLibrary, action.exercise]
+      }
+    }
+    case 'DELETE_LIBRARY_EXERCISE':
+      return { ...state, exerciseLibrary: state.exerciseLibrary.filter((item) => item.id !== action.exerciseId) }
     case 'UPDATE_ENTRY_VALUE':
       return { ...state, currentExercises: state.currentExercises.map((exercise) => exercise.id === action.exerciseId
         ? { ...exercise, values: { ...exercise.values, [action.metric]: sanitizeNumber(action.value) } }
