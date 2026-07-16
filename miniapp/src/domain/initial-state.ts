@@ -4,6 +4,7 @@ import type { AppState } from './types'
 export const initialAppState: AppState = {
   activeTab: 'home',
   workoutStarted: false,
+  workoutStartedAt: null,
   exerciseLibrary: presetExercises,
   currentExercises: [
     { ...presetExercises[0], sets: [
@@ -38,6 +39,7 @@ export function createEmptyUserState(): AppState {
   return {
     activeTab: 'home',
     workoutStarted: false,
+    workoutStartedAt: null,
     exerciseLibrary: presetExercises.map((exercise) => ({ ...exercise, metrics: [...exercise.metrics] })),
     currentExercises: [
       { ...presetExercises[0], metrics: [...presetExercises[0].metrics], sets: [{ weight: 0, reps: 0, completed: false }] }

@@ -63,6 +63,7 @@ export interface AnalyticsResult {
 export interface AppState {
   activeTab: 'home' | 'training' | 'data' | 'profile'
   workoutStarted: boolean
+  workoutStartedAt: number | null
   exerciseLibrary: ExerciseDefinition[]
   currentExercises: CurrentExercise[]
   sessions: WorkoutSession[]

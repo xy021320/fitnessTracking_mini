@@ -5,7 +5,8 @@ import test from 'node:test'
 const require = createRequire(import.meta.url)
 const { loadState, loadUserState, saveState, saveUserState, STORAGE_KEY } = require('../dist-test/store/storage.js')
 const { appReducer } = require('../dist-test/store/reducer.js')
-const { initialAppState } = require('../dist-test/domain/initial-state.js')
+const { createEmptyUserState, initialAppState } = require('../dist-test/domain/initial-state.js')
+const { elapsedMinutes, formatElapsed } = require('../dist-test/domain/workout-timer.js')
 
 test('invalid persisted state falls back safely', () => {
   assert.deepEqual(loadState({ getStorageSync: () => ({ bad: true }) }, initialAppState), initialAppState)
@@ -33,4 +34,24 @@ test('completing workout appends a snapshot and selects data', () => {
   const next = appReducer(initialAppState, { type: 'COMPLETE_WORKOUT', date: '2026-07-13', duration: 18 })
   assert.equal(next.activeTab, 'data')
   assert.equal(next.sessions.at(-1).date, '2026-07-13')
+})
+
+test('formats real workout elapsed time and rounds completed duration up', () => {
+  assert.equal(formatElapsed(1_000, 66_000), '01:05')
+  assert.equal(elapsedMinutes(1_000, 66_000), 2)
+})
+
+test('starting twice preserves the original timestamp', () => {
+  const started = appReducer(createEmptyUserState(), { type: 'START_WORKOUT', startedAt: 1_000 })
+  const resumed = appReducer(started, { type: 'START_WORKOUT', startedAt: 5_000 })
+  assert.equal(resumed.workoutStartedAt, 1_000)
+})
+
+test('removing an exercise keeps the timer and exercise library', () => {
+  const state = { ...createEmptyUserState(), workoutStartedAt: 1_000 }
+  const exerciseId = state.currentExercises[0].id
+  const next = appReducer(state, { type: 'REMOVE_EXERCISE', exerciseId })
+  assert.equal(next.currentExercises.some((item) => item.id === exerciseId), false)
+  assert.equal(next.exerciseLibrary.some((item) => item.id === exerciseId), true)
+  assert.equal(next.workoutStartedAt, 1_000)
 })

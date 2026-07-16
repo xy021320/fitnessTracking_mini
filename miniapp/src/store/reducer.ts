@@ -3,13 +3,14 @@ import { buildSession } from '../domain/sessions'
 import type { AppState, ExerciseDefinition, MetricKey, WorkoutSession } from '../domain/types'
 
 export type AppAction =
-  | { type: 'START_WORKOUT' }
+  | { type: 'START_WORKOUT'; startedAt: number }
   | { type: 'SELECT_TAB'; tab: AppState['activeTab'] }
   | { type: 'ADD_EXERCISE'; exercise: ExerciseDefinition }
   | { type: 'UPDATE_ENTRY_VALUE'; exerciseId: string; metric: MetricKey; value: number }
   | { type: 'ADD_SET'; exerciseId: string }
   | { type: 'UPDATE_SET'; exerciseId: string; setIndex: number; field: 'weight' | 'reps'; value: number }
   | { type: 'COMPLETE_SET'; exerciseId: string; setIndex: number }
+  | { type: 'REMOVE_EXERCISE'; exerciseId: string }
   | { type: 'COMPLETE_WORKOUT'; date: string; duration: number; session?: WorkoutSession }
   | { type: 'UPDATE_PREFERENCES'; weeklyGoal: number }
   | { type: 'HYDRATE'; state: AppState }
@@ -17,7 +18,12 @@ export type AppAction =
 export function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
     case 'START_WORKOUT':
-      return { ...state, activeTab: 'training', workoutStarted: true }
+      return {
+        ...state,
+        activeTab: 'training',
+        workoutStarted: true,
+        workoutStartedAt: state.workoutStartedAt ?? action.startedAt
+      }
     case 'SELECT_TAB':
       return { ...state, activeTab: action.tab }
     case 'ADD_EXERCISE': {
@@ -49,10 +55,12 @@ export function appReducer(state: AppState, action: AppAction): AppState {
       return { ...state, currentExercises: state.currentExercises.map((exercise) => exercise.id === action.exerciseId
         ? { ...exercise, sets: (exercise.sets ?? []).map((set, index) => index === action.setIndex ? { ...set, completed: !set.completed } : set) }
         : exercise) }
+    case 'REMOVE_EXERCISE':
+      return { ...state, currentExercises: state.currentExercises.filter((exercise) => exercise.id !== action.exerciseId) }
     case 'COMPLETE_WORKOUT': {
       const session = action.session ?? buildSession(state, action.date, action.duration)
       if (session.entries.length === 0) return state
-      return { ...state, activeTab: 'data', workoutStarted: false, sessions: [...state.sessions, session] }
+      return { ...state, activeTab: 'data', workoutStarted: false, workoutStartedAt: null, sessions: [...state.sessions, session] }
     }
     case 'UPDATE_PREFERENCES':
       return { ...state, preferences: { ...state.preferences, weeklyGoal: Math.max(1, Math.round(action.weeklyGoal)) } }
