@@ -13,7 +13,7 @@ export type AppAction =
   | { type: 'TOGGLE_EXERCISE_COMPLETE'; exerciseId: string }
   | { type: 'REMOVE_EXERCISE'; exerciseId: string }
   | { type: 'COMPLETE_WORKOUT'; date: string; duration: number; session?: WorkoutSession }
-  | { type: 'UPDATE_PREFERENCES'; weeklyGoal: number }
+  | { type: 'UPDATE_PREFERENCES'; preferences: Partial<AppState['preferences']> }
   | { type: 'HYDRATE'; state: AppState }
 
 export function appReducer(state: AppState, action: AppAction): AppState {
@@ -68,7 +68,11 @@ export function appReducer(state: AppState, action: AppAction): AppState {
       return { ...state, activeTab: 'data', workoutStarted: false, workoutStartedAt: null, sessions: [...state.sessions, session] }
     }
     case 'UPDATE_PREFERENCES':
-      return { ...state, preferences: { ...state.preferences, weeklyGoal: Math.max(1, Math.round(action.weeklyGoal)) } }
+      return { ...state, preferences: {
+        ...state.preferences,
+        ...action.preferences,
+        ...(action.preferences.weeklyGoal == null ? {} : { weeklyGoal: Math.min(7, Math.max(1, Math.round(action.preferences.weeklyGoal))) })
+      } }
     case 'HYDRATE':
       return action.state
     default:

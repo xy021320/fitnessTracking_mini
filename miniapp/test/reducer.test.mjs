@@ -66,3 +66,11 @@ test('value-based exercise completion can be toggled', () => {
   const undone = appReducer(done, { type: 'TOGGLE_EXERCISE_COMPLETE', exerciseId: 'run' })
   assert.equal(undone.currentExercises.find((item) => item.id === 'run').completed, false)
 })
+
+test('preferences can update goal and units together', () => {
+  const next = appReducer(createEmptyUserState(), {
+    type: 'UPDATE_PREFERENCES',
+    preferences: { weeklyGoal: 6, weightUnit: 'lb', distanceUnit: 'mi' }
+  })
+  assert.deepEqual(next.preferences, { weeklyGoal: 6, weightUnit: 'lb', distanceUnit: 'mi' })
+})

@@ -1,5 +1,13 @@
 export type MetricKey = 'weight' | 'reps' | 'sets' | 'duration' | 'distance'
 export type ExerciseCategory = 'strength' | 'cardio' | 'conditioning' | 'mobility' | 'custom'
+export type WeightUnit = 'kg' | 'lb'
+export type DistanceUnit = 'km' | 'mi'
+
+export interface UserPreferences {
+  weightUnit: WeightUnit
+  distanceUnit: DistanceUnit
+  weeklyGoal: number
+}
 
 export interface ExerciseDefinition {
   id: string
@@ -68,5 +76,5 @@ export interface AppState {
   exerciseLibrary: ExerciseDefinition[]
   currentExercises: CurrentExercise[]
   sessions: WorkoutSession[]
-  preferences: { weightUnit: 'kg'; distanceUnit: 'km'; weeklyGoal: number }
+  preferences: UserPreferences
 }

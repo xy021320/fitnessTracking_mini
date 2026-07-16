@@ -65,3 +65,10 @@ test('profile editing uses explicit WeChat nickname and avatar controls', () => 
   assert.match(editor, /cloud\.uploadFile/)
   assert.match(read('src/pages/profile/index.tsx'), /完善资料/)
 })
+
+test('profile menu rows have click actions', () => {
+  const source = read('src/pages/profile/index.tsx')
+  assert.match(source, /openSetting/)
+  assert.match(source, /navigateTo/)
+  assert.match(source, /训练提醒功能需要/)
+})

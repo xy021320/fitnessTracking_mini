@@ -1,10 +1,10 @@
-import type { ExerciseDefinition, WorkoutSession } from '../domain/types'
+import type { ExerciseDefinition, UserPreferences, WorkoutSession } from '../domain/types'
 
 export interface CloudUser {
   id: string
   nickname: string
   avatarFileId: string | null
-  preferences: { weeklyGoal: number; weightUnit: 'kg'; distanceUnit: 'km' }
+  preferences: UserPreferences
   lastLoginAt?: number
 }
 
