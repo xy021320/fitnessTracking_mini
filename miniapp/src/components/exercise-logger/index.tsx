@@ -1,3 +1,4 @@
+import Taro from '@tarojs/taro'
 import { Button, Input, Text, View } from '@tarojs/components'
 import type { AppAction } from '../../store/reducer'
 import type { CurrentExercise, MetricKey } from '../../domain/types'
@@ -24,5 +25,10 @@ export default function ExerciseLogger({ exercise, dispatch, onRemove }: { exerc
       <Text>{metric === 'duration' ? '时长' : metric === 'distance' ? '距离' : metric === 'weight' ? '重量' : '次数'}</Text>
       <View><Input type='digit' value={`${exercise.values?.[metric] || ''}`} placeholder='0' onInput={(event) => dispatch({ type: 'UPDATE_ENTRY_VALUE', exerciseId: exercise.id, metric, value: Number(event.detail.value) })} /><Text>{units[metric]}</Text></View>
     </View>)}</View>
+    <Button className={exercise.completed ? 'exercise-done active' : 'exercise-done'} onClick={() => {
+      const hasValue = Object.values(exercise.values ?? {}).some((value) => Number(value) > 0)
+      if (!hasValue) return void Taro.showToast({ title: '请先填写训练数据', icon: 'none' })
+      dispatch({ type: 'TOGGLE_EXERCISE_COMPLETE', exerciseId: exercise.id })
+    }}>{exercise.completed ? '✓ 已完成' : '完成本项目'}</Button>
   </View>
 }

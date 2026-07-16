@@ -20,7 +20,7 @@ export default function TrainingPage() {
   }, [state.workoutStartedAt, dispatch])
 
   const complete = () => {
-    const hasData = state.currentExercises.some((exercise) => exercise.sets?.some((set) => set.completed) || Object.values(exercise.values ?? {}).some(Number))
+    const hasData = state.currentExercises.some((exercise) => exercise.sets?.some((set) => set.completed) || exercise.completed)
     if (!hasData) return Taro.showToast({ title: '请先完成一项记录', icon: 'none' })
     dispatch({
       type: 'COMPLETE_WORKOUT',
@@ -41,8 +41,8 @@ export default function TrainingPage() {
 
   return <AuthGate><View className='training-page'><View className='training-top'><View><Text className='eyebrow'>进行中的训练</Text><Text className='training-title'>上肢力量日</Text></View></View>
     <View className='training-summary'><Text>{formatElapsed(state.workoutStartedAt, now)}<Text>已用时间</Text></Text><Text>{state.currentExercises.reduce((sum, item) => sum + (item.sets?.filter((set) => set.completed).length ?? 0), 0)}<Text>已完成组</Text></Text><Text>{state.currentExercises.length}<Text>训练项目</Text></Text></View>
-    <ScrollView scrollY className='exercise-scroll'>{state.currentExercises.map((exercise) => <ExerciseLogger key={exercise.id} exercise={exercise} dispatch={dispatch} onRemove={(exerciseId) => void removeExercise(exerciseId, exercise.name)} />)}<Button className='add-exercise' onClick={() => setOpen(true)}>＋ 添加项目</Button></ScrollView>
-    <View className='training-actions'><Button onClick={complete}>完成训练</Button></View>
+    <ScrollView scrollY className='exercise-scroll'>{state.currentExercises.map((exercise) => <ExerciseLogger key={exercise.id} exercise={exercise} dispatch={dispatch} onRemove={(exerciseId) => void removeExercise(exerciseId, exercise.name)} />)}</ScrollView>
+    <View className='training-actions'><Button className='add-exercise' onClick={() => setOpen(true)}>＋ 添加项目</Button><Button className='finish-workout' onClick={complete}>完成训练</Button></View>
     <AddExerciseSheet open={open} onClose={() => setOpen(false)} onAdd={(exercise) => dispatch({ type: 'ADD_EXERCISE', exercise })} />
   </View></AuthGate>
 }

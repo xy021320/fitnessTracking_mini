@@ -42,3 +42,18 @@ test('preset projects use explicit card content wrappers', () => {
   assert.match(sheet, /preset-name/)
   assert.match(sheet, /preset-metrics/)
 })
+
+test('metric exercises expose project completion', () => {
+  const logger = read('src/components/exercise-logger/index.tsx')
+  assert.match(logger, /TOGGLE_EXERCISE_COMPLETE/)
+  assert.match(logger, /完成本项目/)
+  assert.match(logger, /已完成/)
+})
+
+test('both training actions share the fixed action bar', () => {
+  const page = read('src/pages/training/index.tsx')
+  const actions = page.slice(page.indexOf("className='training-actions'"))
+  assert.match(actions, /添加项目/)
+  assert.match(actions, /完成训练/)
+  assert.match(read('src/pages/training/index.scss'), /--training-action-height/)
+})
