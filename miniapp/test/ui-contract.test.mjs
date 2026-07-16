@@ -25,3 +25,20 @@ test('login gate and first-training empty state are present', () => {
   assert.match(read('src/pages/home/index.tsx'), /开始第一次训练/)
   assert.doesNotMatch(read('src/pages/home/index.tsx'), /7月 · 第3周/)
 })
+
+test('training actions are safe-area fixed and exercises are removable', () => {
+  const page = read('src/pages/training/index.tsx')
+  const logger = read('src/components/exercise-logger/index.tsx')
+  const styles = read('src/pages/training/index.scss')
+  assert.match(page, /formatElapsed/)
+  assert.match(page, /showModal/)
+  assert.match(page, /training-actions/)
+  assert.match(logger, /删除/)
+  assert.match(styles, /safe-area-inset-bottom/)
+})
+
+test('preset projects use explicit card content wrappers', () => {
+  const sheet = read('src/components/add-exercise-sheet/index.tsx')
+  assert.match(sheet, /preset-name/)
+  assert.match(sheet, /preset-metrics/)
+})
