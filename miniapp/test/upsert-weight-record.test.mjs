@@ -30,6 +30,19 @@ test('older cross-device weight cannot overwrite a newer cloud value', async () 
   assert.equal(result.applied, false)
 })
 
+test('newer legacy weight wins over an older offline request during migration', async () => {
+  let written
+  await upsertWeightRecord({ record: { id: 'old-offline', date: '2026-07-21', weightKg: 80, updatedAt: 100 } }, {}, {
+    getWXContext: () => ({ OPENID: 'owner-1' }), documentId: () => 'stable-doc', now: () => 300,
+    listWeights: async () => [{ _id: 'legacy-doc', date: '2026-07-21', weightKg: 79, clientUpdatedAt: 200, clientWeightId: 'newer-legacy' }],
+    upsertWeight: async (_id, data) => { written = data; return true },
+    deleteLegacy: async () => undefined
+  })
+  assert.equal(written.weightKg, 79)
+  assert.equal(written.clientUpdatedAt, 200)
+  assert.equal(written.clientWeightId, 'newer-legacy')
+})
+
 test('weight upsert rejects invalid input before writing', async () => {
   await assert.rejects(() => upsertWeightRecord({ record: { date: 'bad', weightKg: 800 } }, {}, {
     getWXContext: () => ({ OPENID: 'owner-1' })
