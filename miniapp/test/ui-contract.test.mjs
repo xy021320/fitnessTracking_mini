@@ -88,3 +88,12 @@ test('app shell controls native tabbar from auth status', () => {
   assert.match(app, /showTabBar/)
   assert.match(app, /authenticated.*offline/s)
 })
+
+test('workout completion exposes editable calories and data retains volume', () => {
+  const training = read('src/pages/training/index.tsx')
+  const data = read('src/pages/data/index.tsx')
+  assert.match(training, /WorkoutSummary/)
+  assert.match(training, /estimatedCalories/)
+  assert.match(data, /总消耗/)
+  assert.match(data, /总训练量/)
+})

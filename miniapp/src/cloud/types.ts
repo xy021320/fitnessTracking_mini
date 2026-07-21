@@ -14,6 +14,8 @@ export interface SessionDocument {
   clientSessionId: string
   date: string
   duration: number
+  calories?: number
+  caloriesEstimated?: boolean
   entries: WorkoutSession['entries']
   summary: { totalVolume: number; totalDistance: number; totalReps: number; completedSets: number }
   createdAt: unknown

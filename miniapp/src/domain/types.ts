@@ -44,6 +44,14 @@ export interface WorkoutSession {
   date: string
   duration: number
   entries: WorkoutEntry[]
+  calories?: number
+  caloriesEstimated?: boolean
+}
+
+export interface BodyWeightRecord {
+  id: string
+  date: string
+  weightKg: number
 }
 
 export interface ProjectAnalytics {
@@ -64,6 +72,7 @@ export interface AnalyticsResult {
   totalDuration: number
   totalVolume: number
   totalDistance: number
+  totalCalories: number
   averagePace: number
   projects: ProjectAnalytics[]
   trend: Array<{ date: string; volume: number; distance: number }>
@@ -76,5 +85,6 @@ export interface AppState {
   exerciseLibrary: ExerciseDefinition[]
   currentExercises: CurrentExercise[]
   sessions: WorkoutSession[]
+  weightRecords: BodyWeightRecord[]
   preferences: UserPreferences
 }

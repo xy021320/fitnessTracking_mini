@@ -58,7 +58,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
 
   const dispatch = useCallback<Dispatch<AppAction>>((action) => {
     if (action.type === 'COMPLETE_WORKOUT') {
-      const session = action.session ?? buildSession(state, action.date, action.duration)
+      const session = action.session ?? buildSession(state, action.date, action.duration, action.calories, action.caloriesEstimated)
       baseDispatch({ ...action, session })
       if (session.entries.length) void syncEngine?.pushSession(session).then((synced) => {
         if (synced) auth.markSynced()

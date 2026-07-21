@@ -20,11 +20,12 @@ function toEntry(exercise: CurrentExercise): WorkoutEntry | null {
   }
 }
 
-export function buildSession(state: { currentExercises: CurrentExercise[] }, date: string, duration: number): WorkoutSession {
+export function buildSession(state: { currentExercises: CurrentExercise[] }, date: string, duration: number, calories?: number, caloriesEstimated?: boolean): WorkoutSession {
   return {
     id: `session-${date}-${Date.now()}`,
     date,
     duration: sanitizeNumber(duration),
-    entries: state.currentExercises.map(toEntry).filter((entry): entry is WorkoutEntry => Boolean(entry))
+    entries: state.currentExercises.map(toEntry).filter((entry): entry is WorkoutEntry => Boolean(entry)),
+    ...(calories == null ? {} : { calories: sanitizeNumber(calories), caloriesEstimated: caloriesEstimated !== false })
   }
 }

@@ -14,7 +14,7 @@ export type AppAction =
   | { type: 'COMPLETE_SET'; exerciseId: string; setIndex: number }
   | { type: 'TOGGLE_EXERCISE_COMPLETE'; exerciseId: string }
   | { type: 'REMOVE_EXERCISE'; exerciseId: string }
-  | { type: 'COMPLETE_WORKOUT'; date: string; duration: number; session?: WorkoutSession }
+  | { type: 'COMPLETE_WORKOUT'; date: string; duration: number; calories?: number; caloriesEstimated?: boolean; session?: WorkoutSession }
   | { type: 'UPDATE_PREFERENCES'; preferences: Partial<AppState['preferences']> }
   | { type: 'HYDRATE'; state: AppState }
 
@@ -76,7 +76,7 @@ export function appReducer(state: AppState, action: AppAction): AppState {
     case 'REMOVE_EXERCISE':
       return { ...state, currentExercises: state.currentExercises.filter((exercise) => exercise.id !== action.exerciseId) }
     case 'COMPLETE_WORKOUT': {
-      const session = action.session ?? buildSession(state, action.date, action.duration)
+      const session = action.session ?? buildSession(state, action.date, action.duration, action.calories, action.caloriesEstimated)
       if (session.entries.length === 0) return state
       return { ...state, activeTab: 'data', workoutStarted: false, workoutStartedAt: null, sessions: [...state.sessions, session] }
     }

@@ -21,6 +21,7 @@ export function toSessionDocument(session: WorkoutSession, timestamp: unknown): 
     clientSessionId: session.id,
     date: session.date,
     duration: sanitizeNumber(session.duration),
+    ...(session.calories == null ? {} : { calories: sanitizeNumber(session.calories), caloriesEstimated: session.caloriesEstimated !== false }),
     entries: session.entries.map((entry) => ({ ...entry, sets: entry.sets?.map((set) => ({ ...set })) })),
     summary: { totalVolume, totalDistance, totalReps, completedSets },
     createdAt: timestamp,
@@ -31,7 +32,13 @@ export function toSessionDocument(session: WorkoutSession, timestamp: unknown): 
 }
 
 export function fromSessionDocument(document: SessionDocument): WorkoutSession {
-  return { id: document.clientSessionId, date: document.date, duration: document.duration, entries: document.entries }
+  return {
+    id: document.clientSessionId,
+    date: document.date,
+    duration: document.duration,
+    entries: document.entries,
+    ...(document.calories == null ? {} : { calories: document.calories, caloriesEstimated: document.caloriesEstimated !== false })
+  }
 }
 
 export function toExerciseDocument(exercise: ExerciseDefinition, timestamp: unknown): ExerciseDocument {

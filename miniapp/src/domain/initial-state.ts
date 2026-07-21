@@ -32,6 +32,7 @@ export const initialAppState: AppState = {
       { ...presetExercises[1], reps: 1200, duration: 12, completed: true }
     ] }
   ],
+  weightRecords: [],
   preferences: { weightUnit: 'kg', distanceUnit: 'km', weeklyGoal: 4 }
 }
 
@@ -45,6 +46,7 @@ export function createEmptyUserState(): AppState {
       { ...presetExercises[0], metrics: [...presetExercises[0].metrics], sets: [{ weight: 0, reps: 0, completed: false }] }
     ],
     sessions: [],
+    weightRecords: [],
     preferences: { weightUnit: 'kg', distanceUnit: 'km', weeklyGoal: 4 }
   }
 }

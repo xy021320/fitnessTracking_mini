@@ -6,6 +6,22 @@ const require = createRequire(import.meta.url)
 const { createExercise, sanitizeNumber } = require('../dist-test/domain/exercises.js')
 const { deriveAnalytics } = require('../dist-test/domain/analytics.js')
 const { buildSession } = require('../dist-test/domain/sessions.js')
+const { estimateCalories, weightForDate } = require('../dist-test/domain/calories.js')
+
+test('calories use category MET body weight and duration', () => {
+  assert.equal(estimateCalories({ duration: 30, weightKg: 70, entries: [{ category: 'strength' }] }), 221)
+  assert.equal(estimateCalories({ duration: 30, weightKg: 70, entries: [{ category: 'cardio' }] }), 294)
+})
+
+test('mixed workouts average category MET values', () => {
+  assert.equal(estimateCalories({ duration: 30, weightKg: 70, entries: [{ category: 'strength' }, { category: 'cardio' }] }), 257)
+})
+
+test('weight lookup uses latest record on or before date then fallback', () => {
+  const records = [{ id: 'w1', date: '2026-07-10', weightKg: 80 }, { id: 'w2', date: '2026-07-12', weightKg: 79 }]
+  assert.deepEqual(weightForDate(records, '2026-07-11'), { weightKg: 80, fallback: false })
+  assert.deepEqual(weightForDate([], '2026-07-11'), { weightKg: 70, fallback: true })
+})
 
 test('exercise metrics are composable and validated', () => {
   assert.deepEqual(createExercise({ name: '  壶铃摆动  ', metrics: ['weight', 'reps', 'reps'] }).metrics, ['weight', 'reps'])
