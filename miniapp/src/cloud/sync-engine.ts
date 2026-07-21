@@ -1,4 +1,4 @@
-import type { ExerciseDefinition, WorkoutSession } from '../domain/types'
+import type { BodyWeightRecord, ExerciseDefinition, WorkoutSession } from '../domain/types'
 
 interface SyncStorage {
   get(key: string): unknown
@@ -9,14 +9,15 @@ interface SessionRepository {
   saveSession(session: WorkoutSession): Promise<void>
   saveExercise?(exercise: ExerciseDefinition): Promise<void>
   deleteExercise?(exerciseId: string): Promise<void>
+  saveWeightRecord?(record: BodyWeightRecord): Promise<void>
 }
 
 interface ExerciseDeletePayload { id: string }
-type PendingPayload = WorkoutSession | ExerciseDefinition | ExerciseDeletePayload
+type PendingPayload = WorkoutSession | ExerciseDefinition | ExerciseDeletePayload | BodyWeightRecord
 
 interface PendingOperation {
   id: string
-  type: 'session' | 'exercise' | 'exercise-delete'
+  type: 'session' | 'exercise' | 'exercise-delete' | 'weight'
   payload: PendingPayload
   attempts: number
   createdAt: number
@@ -25,7 +26,7 @@ interface PendingOperation {
 function isPendingOperation(value: unknown): value is PendingOperation {
   if (!value || typeof value !== 'object') return false
   const candidate = value as Partial<PendingOperation>
-  return (candidate.type === 'session' || candidate.type === 'exercise' || candidate.type === 'exercise-delete') && typeof candidate.id === 'string' && !!candidate.payload
+  return (candidate.type === 'session' || candidate.type === 'exercise' || candidate.type === 'exercise-delete' || candidate.type === 'weight') && typeof candidate.id === 'string' && !!candidate.payload
 }
 
 export function createSyncEngine(repository: SessionRepository, storage: SyncStorage, userId: string) {
@@ -76,6 +77,16 @@ export function createSyncEngine(repository: SessionRepository, storage: SyncSto
         return false
       }
     },
+    async pushWeightRecord(record: BodyWeightRecord) {
+      if (!repository.saveWeightRecord) return
+      try {
+        await repository.saveWeightRecord(record)
+        return true
+      } catch {
+        queueOperation('weight', record)
+        return false
+      }
+    },
     async flush() {
       const remaining: PendingOperation[] = []
       for (const operation of readQueue()) {
@@ -83,6 +94,7 @@ export function createSyncEngine(repository: SessionRepository, storage: SyncSto
           if (operation.type === 'session') await repository.saveSession(operation.payload as WorkoutSession)
           else if (operation.type === 'exercise' && repository.saveExercise) await repository.saveExercise(operation.payload as ExerciseDefinition)
           else if (operation.type === 'exercise-delete' && repository.deleteExercise) await repository.deleteExercise((operation.payload as ExerciseDeletePayload).id)
+          else if (operation.type === 'weight' && repository.saveWeightRecord) await repository.saveWeightRecord(operation.payload as BodyWeightRecord)
         } catch {
           remaining.push({ ...operation, attempts: operation.attempts + 1 })
         }

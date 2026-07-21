@@ -37,3 +37,18 @@ test('pending queues are isolated by cloud user id', async () => {
   await createSyncEngine(repository, storage, 'user-a').pushSession({ id: 'a', date: '', duration: 0, entries: [] })
   assert.equal(createSyncEngine(repository, storage, 'user-b').pendingCount(), 0)
 })
+
+test('failed weight write is queued and retried', async () => {
+  const values = new Map()
+  const storage = { get: (key) => values.get(key), set: (key, value) => values.set(key, value) }
+  let offline = true
+  const repository = {
+    saveSession: async () => undefined,
+    saveWeightRecord: async () => { if (offline) throw new Error('offline') }
+  }
+  const engine = createSyncEngine(repository, storage, 'u1')
+  assert.equal(await engine.pushWeightRecord({ id: 'weight-2026-07-21', date: '2026-07-21', weightKg: 80 }), false)
+  offline = false
+  await engine.flush()
+  assert.equal(engine.pendingCount(), 0)
+})

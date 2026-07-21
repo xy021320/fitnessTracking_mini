@@ -1,6 +1,6 @@
 import { sanitizeNumber } from '../domain/exercises'
 import { buildSession } from '../domain/sessions'
-import type { AppState, ExerciseDefinition, MetricKey, WorkoutSession } from '../domain/types'
+import type { AppState, BodyWeightRecord, ExerciseDefinition, MetricKey, WorkoutSession } from '../domain/types'
 
 export type AppAction =
   | { type: 'START_WORKOUT'; startedAt: number }
@@ -16,6 +16,7 @@ export type AppAction =
   | { type: 'REMOVE_EXERCISE'; exerciseId: string }
   | { type: 'COMPLETE_WORKOUT'; date: string; duration: number; calories?: number; caloriesEstimated?: boolean; session?: WorkoutSession }
   | { type: 'UPDATE_PREFERENCES'; preferences: Partial<AppState['preferences']> }
+  | { type: 'UPSERT_WEIGHT_RECORD'; record: BodyWeightRecord }
   | { type: 'HYDRATE'; state: AppState }
 
 export function appReducer(state: AppState, action: AppAction): AppState {
@@ -86,6 +87,12 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         ...action.preferences,
         ...(action.preferences.weeklyGoal == null ? {} : { weeklyGoal: Math.min(7, Math.max(1, Math.round(action.preferences.weeklyGoal))) })
       } }
+    case 'UPSERT_WEIGHT_RECORD':
+      return {
+        ...state,
+        weightRecords: [...state.weightRecords.filter((item) => item.date !== action.record.date), action.record]
+          .sort((a, b) => a.date.localeCompare(b.date))
+      }
     case 'HYDRATE':
       return action.state
     default:

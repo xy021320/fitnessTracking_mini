@@ -89,3 +89,10 @@ test('deleting a library exercise preserves current draft and history', () => {
   assert.equal(next.currentExercises.length, 1)
   assert.equal(next.sessions[0].entries.length, 1)
 })
+
+test('daily weight upsert replaces the same date', () => {
+  const first = appReducer(createEmptyUserState(), { type: 'UPSERT_WEIGHT_RECORD', record: { id: 'weight-2026-07-21', date: '2026-07-21', weightKg: 80 } })
+  const next = appReducer(first, { type: 'UPSERT_WEIGHT_RECORD', record: { id: 'weight-2026-07-21', date: '2026-07-21', weightKg: 79.5 } })
+  assert.equal(next.weightRecords.length, 1)
+  assert.equal(next.weightRecords[0].weightKg, 79.5)
+})

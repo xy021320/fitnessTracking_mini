@@ -30,7 +30,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
     const hydrate = async () => {
       try {
         await syncEngine?.flush()
-        const [sessions, exercises] = await Promise.all([repository.listSessions(), repository.listExercises()])
+        const [sessions, exercises, weightRecords] = await Promise.all([repository.listSessions(), repository.listExercises(), repository.listWeightRecords()])
         if (!active) return
         const local = loadUserState(Taro, userId, createEmptyUserState())
         const library = [...local.exerciseLibrary]
@@ -38,10 +38,18 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
         const mergedSessions = [...sessions]
         for (const session of local.sessions) if (!mergedSessions.some((item) => item.id === session.id)) mergedSessions.push(session)
         mergedSessions.sort((a, b) => a.date.localeCompare(b.date))
+        const mergedWeights = [...weightRecords]
+        for (const record of local.weightRecords) {
+          const index = mergedWeights.findIndex((item) => item.date === record.date)
+          if (index >= 0) mergedWeights[index] = record
+          else mergedWeights.push(record)
+        }
+        mergedWeights.sort((a, b) => a.date.localeCompare(b.date))
         baseDispatch({ type: 'HYDRATE', state: {
           ...local,
           exerciseLibrary: library,
           sessions: mergedSessions,
+          weightRecords: mergedWeights,
           preferences: { ...local.preferences, ...cloudUser.preferences }
         } })
         if (syncEngine?.pendingCount()) auth.markOffline('部分记录将在网络恢复后自动同步')
@@ -74,6 +82,10 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
     if (action.type === 'DELETE_LIBRARY_EXERCISE') void syncEngine?.pushExerciseDelete(action.exerciseId).then((synced) => {
       if (synced) auth.markSynced()
       else auth.markOffline('项目已从本机移除，云端将在网络恢复后同步')
+    })
+    if (action.type === 'UPSERT_WEIGHT_RECORD') void syncEngine?.pushWeightRecord(action.record).then((synced) => {
+      if (synced) auth.markSynced()
+      else auth.markOffline('体重已保存在本机，将在网络恢复后自动同步')
     })
   }, [state, syncEngine, auth])
 

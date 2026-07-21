@@ -6,5 +6,9 @@
   "workout_sessions": [
     { "name": "owner_client_session", "fields": [{ "field": "_openid", "order": "asc" }, { "field": "clientSessionId", "order": "asc" }] },
     { "name": "owner_updated_session", "fields": [{ "field": "_openid", "order": "asc" }, { "field": "updatedAt", "order": "desc" }] }
+  ],
+  "body_weight_records": [
+    { "name": "owner_weight_date", "fields": [{ "field": "_openid", "order": "asc" }, { "field": "date", "order": "asc" }] },
+    { "name": "owner_updated_weight", "fields": [{ "field": "_openid", "order": "asc" }, { "field": "updatedAt", "order": "desc" }] }
   ]
 }

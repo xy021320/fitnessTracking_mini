@@ -79,3 +79,16 @@ test('repository soft deletes an exercise document', async () => {
   await createCloudRepository(adapter).deleteExercise('custom-1')
   assert.deepEqual(updates[0], ['exercise_library', 'cloud-exercise', { deletedAt: 123, updatedAt: 123 }])
 })
+
+test('repository saves one weight record per owner and date', async () => {
+  const updates = []
+  const adapter = {
+    callFunction: async () => ({ result: {} }), list: async () => [],
+    findOne: async (_collection, where) => where.date === '2026-07-21' ? { _id: 'weight-cloud', createdAt: 1 } : null,
+    add: async () => ({}), update: async (...args) => { updates.push(args) }, serverDate: () => 123
+  }
+  await createCloudRepository(adapter).saveWeightRecord({ id: 'weight-2026-07-21', date: '2026-07-21', weightKg: 79.5 })
+  assert.equal(updates[0][0], 'body_weight_records')
+  assert.equal(updates[0][1], 'weight-cloud')
+  assert.equal(updates[0][2].weightKg, 79.5)
+})

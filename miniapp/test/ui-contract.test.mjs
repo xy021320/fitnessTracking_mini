@@ -97,3 +97,10 @@ test('workout completion exposes editable calories and data retains volume', () 
   assert.match(data, /总消耗/)
   assert.match(data, /总训练量/)
 })
+
+test('data page supports daily weight entry and trend', () => {
+  const data = read('src/pages/data/index.tsx')
+  assert.match(data, /WeightEntrySheet/)
+  assert.match(data, /WeightTrend/)
+  assert.match(data, /记录体重/)
+})

@@ -7,6 +7,7 @@ const { createExercise, sanitizeNumber } = require('../dist-test/domain/exercise
 const { deriveAnalytics } = require('../dist-test/domain/analytics.js')
 const { buildSession } = require('../dist-test/domain/sessions.js')
 const { estimateCalories, weightForDate } = require('../dist-test/domain/calories.js')
+const { bodyWeightSummary, normalizeWeightKg } = require('../dist-test/domain/body-weight.js')
 
 test('calories use category MET body weight and duration', () => {
   assert.equal(estimateCalories({ duration: 30, weightKg: 70, entries: [{ category: 'strength' }] }), 221)
@@ -21,6 +22,19 @@ test('weight lookup uses latest record on or before date then fallback', () => {
   const records = [{ id: 'w1', date: '2026-07-10', weightKg: 80 }, { id: 'w2', date: '2026-07-12', weightKg: 79 }]
   assert.deepEqual(weightForDate(records, '2026-07-11'), { weightKg: 80, fallback: false })
   assert.deepEqual(weightForDate([], '2026-07-11'), { weightKg: 70, fallback: true })
+})
+
+test('weight summary reports previous and total change', () => {
+  const summary = bodyWeightSummary([
+    { id: 'a', date: '2026-07-01', weightKg: 82 },
+    { id: 'b', date: '2026-07-10', weightKg: 81 },
+    { id: 'c', date: '2026-07-20', weightKg: 80.5 }
+  ])
+  assert.equal(summary.latest.weightKg, 80.5)
+  assert.equal(summary.previousChange, -0.5)
+  assert.equal(summary.totalChange, -1.5)
+  assert.equal(normalizeWeightKg(79.56), 79.6)
+  assert.throws(() => normalizeWeightKg(501), /请输入有效体重/)
 })
 
 test('exercise metrics are composable and validated', () => {

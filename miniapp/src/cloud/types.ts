@@ -1,4 +1,4 @@
-import type { ExerciseDefinition, UserPreferences, WorkoutSession } from '../domain/types'
+import type { BodyWeightRecord, ExerciseDefinition, UserPreferences, WorkoutSession } from '../domain/types'
 
 export interface CloudUser {
   id: string
@@ -34,6 +34,15 @@ export interface ExerciseDocument extends ExerciseDefinition {
   schemaVersion: 1
 }
 
+export interface WeightDocument extends BodyWeightRecord {
+  _id?: string
+  _openid?: string
+  clientWeightId: string
+  createdAt: unknown
+  updatedAt: unknown
+  schemaVersion: 1
+}
+
 export interface CloudAdapter {
   callFunction(name: string, data?: Record<string, unknown>): Promise<{ result?: unknown }>
   list(collection: string, where: Record<string, unknown>, options: { limit: number; skip: number; orderBy: [string, 'asc' | 'desc'] }): Promise<Record<string, any>[]>
@@ -52,4 +61,6 @@ export interface CloudRepository {
   deleteExercise(exerciseId: string): Promise<void>
   listSessions(options?: { since?: number }): Promise<WorkoutSession[]>
   saveSession(session: WorkoutSession): Promise<void>
+  listWeightRecords(): Promise<BodyWeightRecord[]>
+  saveWeightRecord(record: BodyWeightRecord): Promise<void>
 }
