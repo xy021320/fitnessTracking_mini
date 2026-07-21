@@ -52,3 +52,14 @@ test('failed weight write is queued and retried', async () => {
   await engine.flush()
   assert.equal(engine.pendingCount(), 0)
 })
+
+test('account deletion keeps user until success then returns anonymous', () => {
+  const user = { id: 'u1', nickname: '微信用户', avatarFileId: null, preferences: { weeklyGoal: 4, weightUnit: 'kg', distanceUnit: 'km' } }
+  const authenticated = authReducer(initialAuthState, { type: 'LOGIN_SUCCESS', user })
+  const deleting = authReducer(authenticated, { type: 'DELETE_ACCOUNT_START' })
+  assert.equal(deleting.user.id, 'u1')
+  assert.equal(deleting.deletingAccount, true)
+  const deleted = authReducer(deleting, { type: 'DELETE_ACCOUNT_SUCCESS' })
+  assert.equal(deleted.status, 'anonymous')
+  assert.equal(deleted.user, null)
+})

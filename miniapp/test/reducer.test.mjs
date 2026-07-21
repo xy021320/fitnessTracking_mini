@@ -3,7 +3,7 @@ import { createRequire } from 'node:module'
 import test from 'node:test'
 
 const require = createRequire(import.meta.url)
-const { loadState, loadUserState, saveState, saveUserState, STORAGE_KEY } = require('../dist-test/store/storage.js')
+const { clearUserStorage, loadState, loadUserState, saveState, saveUserState, STORAGE_KEY } = require('../dist-test/store/storage.js')
 const { appReducer } = require('../dist-test/store/reducer.js')
 const { createEmptyUserState, initialAppState } = require('../dist-test/domain/initial-state.js')
 const { elapsedMinutes, formatElapsed } = require('../dist-test/domain/workout-timer.js')
@@ -95,4 +95,14 @@ test('daily weight upsert replaces the same date', () => {
   const next = appReducer(first, { type: 'UPSERT_WEIGHT_RECORD', record: { id: 'weight-2026-07-21', date: '2026-07-21', weightKg: 79.5 } })
   assert.equal(next.weightRecords.length, 1)
   assert.equal(next.weightRecords[0].weightKg, 79.5)
+})
+
+test('clearing a user removes only scoped state sync queue and consent', () => {
+  const keys = []
+  clearUserStorage({ removeStorageSync: (key) => keys.push(key) }, 'user-a')
+  assert.deepEqual(keys, [
+    'zhu-li-user-state-v1:user-a',
+    'zhu-li-pending-sync-v1:user-a',
+    'zhu-li-privacy-consent-v1'
+  ])
 })

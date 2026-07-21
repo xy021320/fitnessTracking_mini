@@ -71,6 +71,12 @@ export function createCloudRepository(adapter: CloudAdapter): CloudRepository {
       const document = { ...record, clientWeightId: record.id, updatedAt: now, schemaVersion: 1 as const }
       if (existing?._id) await adapter.update('body_weight_records', existing._id, { ...document, createdAt: existing.createdAt })
       else await adapter.add('body_weight_records', { ...document, createdAt: now })
+    },
+    async deleteUserData() {
+      const response = await adapter.callFunction('deleteUserData')
+      const result = response.result as { deleted?: boolean; warnings?: string[] } | undefined
+      if (!result?.deleted) throw new Error('个人数据删除失败，请稍后重试')
+      return { deleted: true, warnings: result.warnings ?? [] }
     }
   }
 }

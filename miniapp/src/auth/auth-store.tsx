@@ -1,8 +1,10 @@
+import Taro from '@tarojs/taro'
 import { createContext, type PropsWithChildren, useCallback, useContext, useEffect, useMemo, useReducer, useRef } from 'react'
 import { createTaroCloudAdapter, initCloud } from '../cloud/config'
 import { createCloudRepository } from '../cloud/repository'
 import type { CloudRepository, CloudUser } from '../cloud/types'
 import { authReducer, initialAuthState, type AuthState } from './auth-reducer'
+import { clearUserStorage } from '../store/storage'
 
 interface AuthValue extends AuthState {
   repository: CloudRepository | null
@@ -11,6 +13,7 @@ interface AuthValue extends AuthState {
   markOffline(error?: string): void
   markSynced(): void
   updateProfile(data: Partial<Pick<CloudUser, 'nickname' | 'avatarFileId' | 'preferences'>>): Promise<void>
+  deleteUserData(): Promise<void>
 }
 
 const AuthContext = createContext<AuthValue | null>(null)
@@ -52,6 +55,20 @@ export function AuthProvider({ children }: PropsWithChildren) {
     dispatch({ type: 'PROFILE_UPDATED', user: { ...state.user, ...data } })
   }, [state.user])
 
+  const deleteUserData = useCallback(async () => {
+    if (!state.user || !repositoryRef.current) return
+    const userId = state.user.id
+    dispatch({ type: 'DELETE_ACCOUNT_START' })
+    try {
+      await repositoryRef.current.deleteUserData()
+      clearUserStorage(Taro, userId)
+      dispatch({ type: 'DELETE_ACCOUNT_SUCCESS' })
+    } catch (error) {
+      dispatch({ type: 'DELETE_ACCOUNT_ERROR', error: messageOf(error) })
+      throw error
+    }
+  }, [state.user])
+
   const value = useMemo<AuthValue>(() => ({
     ...state,
     repository: repositoryRef.current,
@@ -59,8 +76,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
     retry: initialize,
     markOffline: (error) => dispatch({ type: 'SYNC_OFFLINE', error }),
     markSynced: () => dispatch({ type: 'SYNC_SUCCESS' }),
-    updateProfile
-  }), [state, login, initialize, updateProfile])
+    updateProfile,
+    deleteUserData
+  }), [state, login, initialize, updateProfile, deleteUserData])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

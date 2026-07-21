@@ -63,4 +63,5 @@ export interface CloudRepository {
   saveSession(session: WorkoutSession): Promise<void>
   listWeightRecords(): Promise<BodyWeightRecord[]>
   saveWeightRecord(record: BodyWeightRecord): Promise<void>
+  deleteUserData(): Promise<{ deleted: boolean; warnings: string[] }>
 }

@@ -104,3 +104,11 @@ test('data page supports daily weight entry and trend', () => {
   assert.match(data, /WeightTrend/)
   assert.match(data, /记录体重/)
 })
+
+test('privacy page provides official contract and permanent deletion', () => {
+  const privacy = read('src/pages/privacy/index.tsx')
+  assert.match(privacy, /openPrivacyContract/)
+  assert.match(privacy, /永久删除个人数据/)
+  assert.match(privacy, /showModal/)
+  assert.match(privacy, /deleteUserData/)
+})
