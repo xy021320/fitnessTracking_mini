@@ -89,6 +89,25 @@ test('deletion barrier waits for in-flight writes and pauses new writes', async 
   assert.equal(calls, 1)
 })
 
+test('deletion barrier waits for an in-flight offline queue flush', async () => {
+  let finish
+  const values = new Map([['zhu-li-pending-sync-v1:u1', [{
+    id: 's1', type: 'session', payload: { id: 's1', date: '2026-07-21', duration: 10, entries: [] }, attempts: 0, createdAt: 1
+  }]]])
+  const storage = { get: (key) => values.get(key), set: (key, value) => values.set(key, value) }
+  const repository = { saveSession: () => new Promise((resolve) => { finish = resolve }) }
+  const engine = createSyncEngine(repository, storage, 'u1')
+  const flushing = engine.flush()
+  let drained = false
+  const barrier = engine.pauseAndDrain().then(() => { drained = true })
+  await Promise.resolve()
+  assert.equal(drained, false)
+  finish()
+  await flushing
+  await barrier
+  assert.equal(engine.pendingCount(), 0)
+})
+
 test('account deletion keeps user until success then returns anonymous', () => {
   const user = { id: 'u1', nickname: '微信用户', avatarFileId: null, preferences: { weeklyGoal: 4, weightUnit: 'kg', distanceUnit: 'km' } }
   const authenticated = authReducer(initialAuthState, { type: 'LOGIN_SUCCESS', user })

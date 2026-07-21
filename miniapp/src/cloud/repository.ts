@@ -64,15 +64,16 @@ export function createCloudRepository(adapter: CloudAdapter): CloudRepository {
       const docs = await listAll('body_weight_records', owner)
       const byDate = new Map<string, { id: string; date: string; weightKg: number; updatedAt?: number }>()
       docs.forEach((doc) => {
+        const serverUpdatedAt = doc.updatedAt instanceof Date ? doc.updatedAt.getTime() : new Date(doc.updatedAt ?? 0).getTime()
         const record = {
           id: doc.clientWeightId || `weight-${doc.date}`,
           date: doc.date,
           weightKg: Number(doc.weightKg),
-          updatedAt: Number(doc.clientUpdatedAt) || undefined
+          updatedAt: Number(doc.clientUpdatedAt) || (Number.isFinite(serverUpdatedAt) ? serverUpdatedAt : undefined)
         }
         if (!record.date || !(record.weightKg > 0)) return
         const existing = byDate.get(record.date)
-        if (!existing || (record.updatedAt ?? 0) >= (existing.updatedAt ?? 0)) byDate.set(record.date, record)
+        if (!existing || (record.updatedAt ?? 0) > (existing.updatedAt ?? 0)) byDate.set(record.date, record)
       })
       return [...byDate.values()]
     },

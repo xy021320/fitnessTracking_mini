@@ -115,19 +115,21 @@ export function createSyncEngine(repository: SessionRepository, storage: SyncSto
     },
     async flush() {
       if (paused) return readQueue().length
-      const remaining: PendingOperation[] = []
-      for (const operation of readQueue()) {
-        try {
-          if (operation.type === 'session') await repository.saveSession(operation.payload as WorkoutSession)
-          else if (operation.type === 'exercise' && repository.saveExercise) await repository.saveExercise(operation.payload as ExerciseDefinition)
-          else if (operation.type === 'exercise-delete' && repository.deleteExercise) await repository.deleteExercise((operation.payload as ExerciseDeletePayload).id)
-          else if (operation.type === 'weight' && repository.saveWeightRecord) await repository.saveWeightRecord(operation.payload as BodyWeightRecord)
-        } catch {
-          remaining.push({ ...operation, attempts: operation.attempts + 1 })
+      return track(async () => {
+        const remaining: PendingOperation[] = []
+        for (const operation of readQueue()) {
+          try {
+            if (operation.type === 'session') await repository.saveSession(operation.payload as WorkoutSession)
+            else if (operation.type === 'exercise' && repository.saveExercise) await repository.saveExercise(operation.payload as ExerciseDefinition)
+            else if (operation.type === 'exercise-delete' && repository.deleteExercise) await repository.deleteExercise((operation.payload as ExerciseDeletePayload).id)
+            else if (operation.type === 'weight' && repository.saveWeightRecord) await repository.saveWeightRecord(operation.payload as BodyWeightRecord)
+          } catch {
+            remaining.push({ ...operation, attempts: operation.attempts + 1 })
+          }
         }
-      }
-      writeQueue(remaining)
-      return remaining.length
+        writeQueue(remaining)
+        return remaining.length
+      })
     },
     pendingCount() {
       return readQueue().length

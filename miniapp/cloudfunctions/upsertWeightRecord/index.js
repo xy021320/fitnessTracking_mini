@@ -5,20 +5,30 @@ async function upsertWeightRecord(event, _context, deps) {
   if (!OPENID) throw new Error('无法识别当前微信用户')
   const record = event?.record || {}
   const weightKg = Math.round(Number(record.weightKg) * 10) / 10
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(record.date || '') || !(weightKg > 0 && weightKg <= 500)) {
+  if (!isCalendarDate(record.date) || !(weightKg > 0 && weightKg <= 500)) {
     throw new Error('体重记录无效')
   }
+  const now = deps.now()
+  const clientUpdatedAt = Math.min(Math.max(Number(record.updatedAt) || now, 0), now + 5 * 60 * 1000)
   const id = deps.documentId(OPENID, record.date)
-  await deps.setWeight(id, {
+  const applied = await deps.upsertWeight(id, {
     _openid: OPENID,
     clientWeightId: record.id || `weight-${record.date}`,
     date: record.date,
     weightKg,
-    clientUpdatedAt: Number(record.updatedAt) || deps.now(),
-    updatedAt: deps.serverNow ? deps.serverNow() : deps.now(),
+    clientUpdatedAt,
+    updatedAt: deps.serverNow ? deps.serverNow() : now,
     schemaVersion: 1
   })
-  return { saved: true }
+  await deps.deleteLegacy(OPENID, record.date, id)
+  return { saved: true, applied }
+}
+
+function isCalendarDate(value) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value || '')) return false
+  const [year, month, day] = value.split('-').map(Number)
+  const parsed = new Date(Date.UTC(year, month - 1, day))
+  return parsed.getUTCFullYear() === year && parsed.getUTCMonth() === month - 1 && parsed.getUTCDate() === day
 }
 
 function createCloudDeps() {
@@ -30,8 +40,24 @@ function createCloudDeps() {
     documentId: (openid, date) => crypto.createHash('sha256').update(`${openid}:${date}`).digest('hex').slice(0, 32),
     now: () => Date.now(),
     serverNow: () => db.serverDate(),
-    async setWeight(id, data) {
-      await db.collection('body_weight_records').doc(id).set({ data })
+    async upsertWeight(id, data) {
+      return db.runTransaction(async (transaction) => {
+        const reference = transaction.collection('body_weight_records').doc(id)
+        const result = await reference.get()
+        const existing = result.data || null
+        if (existing && Number(existing.clientUpdatedAt) >= data.clientUpdatedAt) return false
+        await reference.set({ data })
+        return true
+      })
+    },
+    async deleteLegacy(openid, date, keepId) {
+      const collection = db.collection('body_weight_records')
+      while (true) {
+        const result = await collection.where({ _openid: openid, date }).limit(20).get()
+        const legacy = result.data.filter((document) => document._id !== keepId)
+        if (!legacy.length) return
+        await Promise.all(legacy.map((document) => collection.doc(document._id).remove()))
+      }
     }
   }
 }
