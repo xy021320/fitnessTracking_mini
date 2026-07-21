@@ -81,3 +81,10 @@ test('profile secondary pages expose project management and privacy content', ()
   assert.match(privacy, /身份与可见范围/)
   assert.match(privacy, /云端保存内容/)
 })
+
+test('app shell controls native tabbar from auth status', () => {
+  const app = read('src/app.tsx')
+  assert.match(app, /hideTabBar/)
+  assert.match(app, /showTabBar/)
+  assert.match(app, /authenticated.*offline/s)
+})

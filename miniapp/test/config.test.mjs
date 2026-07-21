@@ -23,3 +23,11 @@ test('secondary profile pages are registered', () => {
   assert.match(config, /pages\/custom-projects\/index/)
   assert.match(config, /pages\/privacy\/index/)
 })
+
+test('privacy checks and official contract entry are enabled', () => {
+  const config = readFileSync(new URL('../src/app.config.ts', import.meta.url), 'utf8')
+  const gate = readFileSync(new URL('../src/components/auth-gate/index.tsx', import.meta.url), 'utf8')
+  assert.match(config, /__usePrivacyCheck__/)
+  assert.match(gate, /openPrivacyContract/)
+  assert.match(gate, /请先阅读并同意隐私保护指引/)
+})
