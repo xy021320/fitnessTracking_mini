@@ -8,6 +8,7 @@ const { deriveAnalytics } = require('../dist-test/domain/analytics.js')
 const { buildSession } = require('../dist-test/domain/sessions.js')
 const { estimateCalories, weightForDate } = require('../dist-test/domain/calories.js')
 const { bodyWeightSummary, normalizeWeightKg } = require('../dist-test/domain/body-weight.js')
+const { localDateString } = require('../dist-test/domain/date.js')
 
 test('calories use category MET body weight and duration', () => {
   assert.equal(estimateCalories({ duration: 30, weightKg: 70, entries: [{ category: 'strength' }] }), 221)
@@ -35,6 +36,11 @@ test('weight summary reports previous and total change', () => {
   assert.equal(summary.totalChange, -1.5)
   assert.equal(normalizeWeightKg(79.56), 79.6)
   assert.throws(() => normalizeWeightKg(501), /请输入有效体重/)
+})
+
+test('local training date does not use UTC day', () => {
+  const date = new Date(2026, 6, 21, 0, 30)
+  assert.equal(localDateString(date), '2026-07-21')
 })
 
 test('exercise metrics are composable and validated', () => {

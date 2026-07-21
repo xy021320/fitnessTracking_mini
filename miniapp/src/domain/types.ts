@@ -52,6 +52,7 @@ export interface BodyWeightRecord {
   id: string
   date: string
   weightKg: number
+  updatedAt?: number
 }
 
 export interface ProjectAnalytics {

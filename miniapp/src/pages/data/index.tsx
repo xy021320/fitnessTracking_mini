@@ -2,6 +2,7 @@ import { Button, Text, View } from '@tarojs/components'
 import { useState } from 'react'
 import { deriveAnalytics } from '../../domain/analytics'
 import { bodyWeightSummary, kgToDisplay } from '../../domain/body-weight'
+import { localDateString } from '../../domain/date'
 import TrendChart from '../../components/trend-chart'
 import AuthGate from '../../components/auth-gate'
 import WeightEntrySheet from '../../components/weight-entry-sheet'
@@ -14,8 +15,7 @@ const compact = (value: number) => value >= 1000 ? `${(value / 1000).toFixed(1)}
 export default function DataPage() {
   const { state, dispatch } = useAppStore()
   const [weightOpen, setWeightOpen] = useState(false)
-  const now = new Date()
-  const today = `${now.getFullYear()}-${`${now.getMonth() + 1}`.padStart(2, '0')}-${`${now.getDate()}`.padStart(2, '0')}`
+  const today = localDateString()
   const data = deriveAnalytics(state.sessions, state.weightRecords)
   const weight = bodyWeightSummary(state.weightRecords)
   const todayRecord = state.weightRecords.find((record) => record.date === today)
@@ -30,6 +30,6 @@ export default function DataPage() {
       <View className='chart-card'><View><Text>训练趋势</Text><Text>近 {data.trend.length} 次</Text></View><TrendChart points={data.trend} /></View>
       <Text className='projects-title'>项目表现</Text>{data.projects.slice(0, 5).map((project) => <View className='project-row' key={project.id}><View><Text>{project.name}</Text><Text>最近 {project.latestDate}</Text></View><View><Text>{project.volume ? `${compact(project.volume)} kg` : project.distance ? `${project.distance.toFixed(1)} km` : `${project.reps} 次`}</Text><Text>{project.sessions} 次训练</Text></View></View>)}
     </>}
-    <WeightEntrySheet open={weightOpen} date={today} record={todayRecord} unit={state.preferences.weightUnit} onClose={() => setWeightOpen(false)} onSave={(record) => dispatch({ type: 'UPSERT_WEIGHT_RECORD', record })} />
+    <WeightEntrySheet open={weightOpen} date={today} record={todayRecord} records={state.weightRecords} unit={state.preferences.weightUnit} onClose={() => setWeightOpen(false)} onSave={(record) => dispatch({ type: 'UPSERT_WEIGHT_RECORD', record })} />
   </View></AuthGate>
 }

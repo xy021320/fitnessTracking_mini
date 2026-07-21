@@ -34,10 +34,13 @@ export interface ExerciseDocument extends ExerciseDefinition {
   schemaVersion: 1
 }
 
-export interface WeightDocument extends BodyWeightRecord {
+export interface WeightDocument {
   _id?: string
   _openid?: string
   clientWeightId: string
+  date: string
+  weightKg: number
+  clientUpdatedAt?: number
   createdAt: unknown
   updatedAt: unknown
   schemaVersion: 1

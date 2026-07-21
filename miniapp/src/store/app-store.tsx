@@ -1,5 +1,5 @@
 import Taro from '@tarojs/taro'
-import { createContext, type Dispatch, type PropsWithChildren, useCallback, useContext, useEffect, useMemo, useReducer } from 'react'
+import { createContext, type Dispatch, type PropsWithChildren, useCallback, useContext, useEffect, useMemo, useReducer, useState } from 'react'
 import { useAuth } from '../auth/auth-store'
 import { createSyncEngine } from '../cloud/sync-engine'
 import { createEmptyUserState } from '../domain/initial-state'
@@ -14,13 +14,30 @@ const AppStoreContext = createContext<StoreValue | null>(null)
 export function AppStoreProvider({ children }: PropsWithChildren) {
   const auth = useAuth()
   const userId = auth.user?.id ?? 'anonymous'
-  const [state, baseDispatch] = useReducer(appReducer, createEmptyUserState(), (fallback) => loadUserState(Taro, userId, fallback))
+  const stateForUser = (id: string) => id === 'anonymous' ? createEmptyUserState() : loadUserState(Taro, id, createEmptyUserState())
+  const [state, baseDispatch] = useReducer(appReducer, createEmptyUserState(), () => stateForUser(userId))
+  const [loadedUserId, setLoadedUserId] = useState(userId)
   const syncEngine = useMemo(() => auth.repository ? createSyncEngine(auth.repository, {
     get: (key) => Taro.getStorageSync(key),
     set: (key, value) => Taro.setStorageSync(key, value)
   }, userId) : null, [auth.repository, userId])
 
-  useEffect(() => { saveUserState(Taro, userId, state) }, [state, userId])
+  useEffect(() => {
+    baseDispatch({ type: 'HYDRATE', state: stateForUser(userId) })
+    setLoadedUserId(userId)
+  // Reset memory before persistence whenever the cloud identity changes.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId])
+
+  useEffect(() => {
+    if (!auth.user || auth.deletingAccount || loadedUserId !== userId) return
+    saveUserState(Taro, userId, state)
+  }, [state, userId, loadedUserId, auth.user, auth.deletingAccount])
+
+  useEffect(() => auth.registerDeleteBarrier(async () => {
+    if (!syncEngine) return () => undefined
+    return syncEngine.pauseAndDrain()
+  }), [auth.registerDeleteBarrier, syncEngine])
 
   useEffect(() => {
     if (!auth.repository || !auth.user) return
@@ -41,8 +58,8 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
         const mergedWeights = [...weightRecords]
         for (const record of local.weightRecords) {
           const index = mergedWeights.findIndex((item) => item.date === record.date)
-          if (index >= 0) mergedWeights[index] = record
-          else mergedWeights.push(record)
+          if (index < 0) mergedWeights.push(record)
+          else if ((record.updatedAt ?? 0) > (mergedWeights[index].updatedAt ?? 0)) mergedWeights[index] = record
         }
         mergedWeights.sort((a, b) => a.date.localeCompare(b.date))
         baseDispatch({ type: 'HYDRATE', state: {

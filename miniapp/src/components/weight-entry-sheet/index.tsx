@@ -8,12 +8,13 @@ interface Props {
   open: boolean
   date: string
   record?: BodyWeightRecord
+  records: BodyWeightRecord[]
   unit: WeightUnit
   onClose: () => void
   onSave: (record: BodyWeightRecord) => void
 }
 
-export default function WeightEntrySheet({ open, date, record, unit, onClose, onSave }: Props) {
+export default function WeightEntrySheet({ open, date, record, records, unit, onClose, onSave }: Props) {
   const [selectedDate, setSelectedDate] = useState(date)
   const [value, setValue] = useState('')
   const [error, setError] = useState('')
@@ -28,7 +29,7 @@ export default function WeightEntrySheet({ open, date, record, unit, onClose, on
   if (!open) return null
   const save = () => {
     try {
-      onSave({ id: `weight-${selectedDate}`, date: selectedDate, weightKg: displayToKg(value, unit) })
+      onSave({ id: `weight-${selectedDate}`, date: selectedDate, weightKg: displayToKg(value, unit), updatedAt: Date.now() })
       onClose()
     } catch (reason) {
       setError((reason as Error).message)
@@ -38,7 +39,13 @@ export default function WeightEntrySheet({ open, date, record, unit, onClose, on
     <View className='weight-sheet-handle' />
     <View className='weight-sheet-title'><Text>记录体重</Text><Text onClick={onClose}>关闭</Text></View>
     <Text className='weight-sheet-label'>记录日期</Text>
-    <Picker mode='date' value={selectedDate} end={date} onChange={(event) => setSelectedDate(String(event.detail.value))}>
+    <Picker mode='date' value={selectedDate} end={date} onChange={(event) => {
+      const nextDate = String(event.detail.value)
+      const nextRecord = records.find((item) => item.date === nextDate)
+      setSelectedDate(nextDate)
+      setValue(nextRecord ? `${kgToDisplay(nextRecord.weightKg, unit)}` : '')
+      setError('')
+    }}>
       <View className='weight-date'>{selectedDate}</View>
     </Picker>
     <Text className='weight-sheet-label'>当天体重</Text>

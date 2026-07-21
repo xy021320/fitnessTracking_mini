@@ -31,6 +31,8 @@ function isPendingOperation(value: unknown): value is PendingOperation {
 
 export function createSyncEngine(repository: SessionRepository, storage: SyncStorage, userId: string) {
   const storageKey = `zhu-li-pending-sync-v1:${userId}`
+  const inFlight = new Set<Promise<unknown>>()
+  let paused = false
 
   const readQueue = (): PendingOperation[] => {
     const stored = storage.get(storageKey)
@@ -41,16 +43,34 @@ export function createSyncEngine(repository: SessionRepository, storage: SyncSto
 
   const queueOperation = (type: PendingOperation['type'], payload: PendingPayload) => {
     const queue = readQueue()
-    if (!queue.some((item) => item.type === type && item.id === payload.id)) {
+    const existing = queue.findIndex((item) => item.type === type && item.id === payload.id)
+    if (existing >= 0) {
+      queue[existing] = { ...queue[existing], payload, attempts: 0 }
+      writeQueue(queue)
+    } else {
       queue.push({ id: payload.id, type, payload, attempts: 0, createdAt: Date.now() })
       writeQueue(queue)
     }
   }
 
+  const removeOperation = (type: PendingOperation['type'], id: string) => {
+    const next = readQueue().filter((item) => item.type !== type || item.id !== id)
+    writeQueue(next)
+  }
+
+  const track = <T,>(operation: () => Promise<T>): Promise<T> => {
+    const promise = operation()
+    inFlight.add(promise)
+    void promise.then(() => inFlight.delete(promise), () => inFlight.delete(promise))
+    return promise
+  }
+
   return {
     async pushSession(session: WorkoutSession) {
+      if (paused) { queueOperation('session', session); return false }
       try {
-        await repository.saveSession(session)
+        await track(() => repository.saveSession(session))
+        removeOperation('session', session.id)
         return true
       } catch {
         queueOperation('session', session)
@@ -59,8 +79,10 @@ export function createSyncEngine(repository: SessionRepository, storage: SyncSto
     },
     async pushExercise(exercise: ExerciseDefinition) {
       if (!repository.saveExercise) return
+      if (paused) { queueOperation('exercise', exercise); return false }
       try {
-        await repository.saveExercise(exercise)
+        await track(() => repository.saveExercise!(exercise))
+        removeOperation('exercise', exercise.id)
         return true
       } catch {
         queueOperation('exercise', exercise)
@@ -69,8 +91,10 @@ export function createSyncEngine(repository: SessionRepository, storage: SyncSto
     },
     async pushExerciseDelete(exerciseId: string) {
       if (!repository.deleteExercise) return
+      if (paused) { queueOperation('exercise-delete', { id: exerciseId }); return false }
       try {
-        await repository.deleteExercise(exerciseId)
+        await track(() => repository.deleteExercise!(exerciseId))
+        removeOperation('exercise-delete', exerciseId)
         return true
       } catch {
         queueOperation('exercise-delete', { id: exerciseId })
@@ -79,8 +103,10 @@ export function createSyncEngine(repository: SessionRepository, storage: SyncSto
     },
     async pushWeightRecord(record: BodyWeightRecord) {
       if (!repository.saveWeightRecord) return
+      if (paused) { queueOperation('weight', record); return false }
       try {
-        await repository.saveWeightRecord(record)
+        await track(() => repository.saveWeightRecord!(record))
+        removeOperation('weight', record.id)
         return true
       } catch {
         queueOperation('weight', record)
@@ -88,6 +114,7 @@ export function createSyncEngine(repository: SessionRepository, storage: SyncSto
       }
     },
     async flush() {
+      if (paused) return readQueue().length
       const remaining: PendingOperation[] = []
       for (const operation of readQueue()) {
         try {
@@ -104,6 +131,11 @@ export function createSyncEngine(repository: SessionRepository, storage: SyncSto
     },
     pendingCount() {
       return readQueue().length
+    },
+    async pauseAndDrain() {
+      paused = true
+      await Promise.all([...inFlight].map((promise) => promise.catch(() => undefined)))
+      return () => { paused = false }
     }
   }
 }

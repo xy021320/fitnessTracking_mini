@@ -62,15 +62,23 @@ export function createCloudRepository(adapter: CloudAdapter): CloudRepository {
     },
     async listWeightRecords() {
       const docs = await listAll('body_weight_records', owner)
-      return docs.map((doc) => ({ id: doc.clientWeightId || `weight-${doc.date}`, date: doc.date, weightKg: Number(doc.weightKg) }))
-        .filter((record) => record.date && record.weightKg > 0)
+      const byDate = new Map<string, { id: string; date: string; weightKg: number; updatedAt?: number }>()
+      docs.forEach((doc) => {
+        const record = {
+          id: doc.clientWeightId || `weight-${doc.date}`,
+          date: doc.date,
+          weightKg: Number(doc.weightKg),
+          updatedAt: Number(doc.clientUpdatedAt) || undefined
+        }
+        if (!record.date || !(record.weightKg > 0)) return
+        const existing = byDate.get(record.date)
+        if (!existing || (record.updatedAt ?? 0) >= (existing.updatedAt ?? 0)) byDate.set(record.date, record)
+      })
+      return [...byDate.values()]
     },
     async saveWeightRecord(record) {
-      const existing = await adapter.findOne('body_weight_records', { ...owner, date: record.date })
-      const now = adapter.serverDate()
-      const document = { ...record, clientWeightId: record.id, updatedAt: now, schemaVersion: 1 as const }
-      if (existing?._id) await adapter.update('body_weight_records', existing._id, { ...document, createdAt: existing.createdAt })
-      else await adapter.add('body_weight_records', { ...document, createdAt: now })
+      const response = await adapter.callFunction('upsertWeightRecord', { record })
+      if (!(response.result as { saved?: boolean } | undefined)?.saved) throw new Error('体重同步失败，请稍后重试')
     },
     async deleteUserData() {
       const response = await adapter.callFunction('deleteUserData')

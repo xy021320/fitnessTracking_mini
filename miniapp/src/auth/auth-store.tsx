@@ -13,7 +13,8 @@ interface AuthValue extends AuthState {
   markOffline(error?: string): void
   markSynced(): void
   updateProfile(data: Partial<Pick<CloudUser, 'nickname' | 'avatarFileId' | 'preferences'>>): Promise<void>
-  deleteUserData(): Promise<void>
+  deleteUserData(): Promise<{ deleted: boolean; warnings: string[] }>
+  registerDeleteBarrier(barrier: () => Promise<() => void>): () => void
 }
 
 const AuthContext = createContext<AuthValue | null>(null)
@@ -25,6 +26,7 @@ function messageOf(error: unknown): string {
 export function AuthProvider({ children }: PropsWithChildren) {
   const [state, dispatch] = useReducer(authReducer, initialAuthState)
   const repositoryRef = useRef<CloudRepository | null>(null)
+  const deleteBarrierRef = useRef<() => Promise<() => void>>(async () => () => undefined)
 
   const initialize = useCallback(async () => {
     try {
@@ -56,18 +58,29 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }, [state.user])
 
   const deleteUserData = useCallback(async () => {
-    if (!state.user || !repositoryRef.current) return
+    if (!state.user || !repositoryRef.current) throw new Error('请先登录')
     const userId = state.user.id
     dispatch({ type: 'DELETE_ACCOUNT_START' })
+    let resumeSync: () => void = () => undefined
     try {
-      await repositoryRef.current.deleteUserData()
+      resumeSync = await deleteBarrierRef.current()
+      const result = await repositoryRef.current.deleteUserData()
       clearUserStorage(Taro, userId)
       dispatch({ type: 'DELETE_ACCOUNT_SUCCESS' })
+      return result
     } catch (error) {
+      resumeSync()
       dispatch({ type: 'DELETE_ACCOUNT_ERROR', error: messageOf(error) })
       throw error
     }
   }, [state.user])
+
+  const registerDeleteBarrier = useCallback((barrier: () => Promise<() => void>) => {
+    deleteBarrierRef.current = barrier
+    return () => {
+      if (deleteBarrierRef.current === barrier) deleteBarrierRef.current = async () => () => undefined
+    }
+  }, [])
 
   const value = useMemo<AuthValue>(() => ({
     ...state,
@@ -77,8 +90,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
     markOffline: (error) => dispatch({ type: 'SYNC_OFFLINE', error }),
     markSynced: () => dispatch({ type: 'SYNC_SUCCESS' }),
     updateProfile,
-    deleteUserData
-  }), [state, login, initialize, updateProfile, deleteUserData])
+    deleteUserData,
+    registerDeleteBarrier
+  }), [state, login, initialize, updateProfile, deleteUserData, registerDeleteBarrier])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

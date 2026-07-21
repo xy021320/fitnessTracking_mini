@@ -107,8 +107,24 @@ test('data page supports daily weight entry and trend', () => {
 
 test('privacy page provides official contract and permanent deletion', () => {
   const privacy = read('src/pages/privacy/index.tsx')
-  assert.match(privacy, /openPrivacyContract/)
+  assert.match(privacy, /Taro\.openPrivacyContract/)
   assert.match(privacy, /永久删除个人数据/)
   assert.match(privacy, /showModal/)
   assert.match(privacy, /deleteUserData/)
+})
+
+test('account deletion resets memory and drains sync before cloud deletion', () => {
+  const store = read('src/store/app-store.tsx')
+  const auth = read('src/auth/auth-store.tsx')
+  assert.match(store, /loadedUserId/)
+  assert.match(store, /!auth\.user.*return/s)
+  assert.match(store, /registerDeleteBarrier/)
+  assert.match(auth, /deleteBarrierRef\.current/)
+})
+
+test('workout summary freezes local date duration and calories at completion', () => {
+  const training = read('src/pages/training/index.tsx')
+  assert.match(training, /localDateString/)
+  assert.match(training, /setCompletion/)
+  assert.doesNotMatch(training, /toISOString/)
 })

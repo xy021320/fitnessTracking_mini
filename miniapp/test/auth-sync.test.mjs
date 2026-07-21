@@ -53,6 +53,42 @@ test('failed weight write is queued and retried', async () => {
   assert.equal(engine.pendingCount(), 0)
 })
 
+test('queued daily weight uses latest value and successful push clears stale queue', async () => {
+  const values = new Map()
+  const storage = { get: (key) => values.get(key), set: (key, value) => values.set(key, value) }
+  let offline = true
+  const saved = []
+  const repository = {
+    saveSession: async () => undefined,
+    saveWeightRecord: async (record) => { if (offline) throw new Error('offline'); saved.push(record) }
+  }
+  const engine = createSyncEngine(repository, storage, 'u1')
+  await engine.pushWeightRecord({ id: 'weight-2026-07-21', date: '2026-07-21', weightKg: 80 })
+  await engine.pushWeightRecord({ id: 'weight-2026-07-21', date: '2026-07-21', weightKg: 79 })
+  offline = false
+  await engine.flush()
+  assert.equal(saved[0].weightKg, 79)
+  assert.equal(engine.pendingCount(), 0)
+})
+
+test('deletion barrier waits for in-flight writes and pauses new writes', async () => {
+  let finish
+  let calls = 0
+  const repository = { saveSession: () => { calls += 1; return new Promise((resolve) => { finish = resolve }) } }
+  const storage = { get: () => [], set: () => undefined }
+  const engine = createSyncEngine(repository, storage, 'u1')
+  const pushing = engine.pushSession({ id: 's1', date: '2026-07-21', duration: 10, entries: [] })
+  let drained = false
+  const barrier = engine.pauseAndDrain().then(() => { drained = true })
+  await Promise.resolve()
+  assert.equal(drained, false)
+  finish()
+  await pushing
+  await barrier
+  await engine.pushSession({ id: 's2', date: '2026-07-21', duration: 10, entries: [] })
+  assert.equal(calls, 1)
+})
+
 test('account deletion keeps user until success then returns anonymous', () => {
   const user = { id: 'u1', nickname: '微信用户', avatarFileId: null, preferences: { weeklyGoal: 4, weightUnit: 'kg', distanceUnit: 'km' } }
   const authenticated = authReducer(initialAuthState, { type: 'LOGIN_SUCCESS', user })
