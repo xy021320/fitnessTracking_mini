@@ -16,5 +16,11 @@
     "create": "auth.openid == request.resource._openid",
     "update": "auth.openid == resource._openid && auth.openid == request.resource._openid",
     "delete": "auth.openid == resource._openid"
+  },
+  "body_weight_records": {
+    "read": "auth.openid == resource._openid",
+    "create": "auth.openid == request.resource._openid",
+    "update": "auth.openid == resource._openid && auth.openid == request.resource._openid",
+    "delete": "auth.openid == resource._openid"
   }
 }

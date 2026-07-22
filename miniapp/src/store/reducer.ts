@@ -1,23 +1,33 @@
 import { sanitizeNumber } from '../domain/exercises'
 import { buildSession } from '../domain/sessions'
-import type { AppState, ExerciseDefinition, MetricKey, WorkoutSession } from '../domain/types'
+import type { AppState, BodyWeightRecord, ExerciseDefinition, MetricKey, WorkoutSession } from '../domain/types'
 
 export type AppAction =
-  | { type: 'START_WORKOUT' }
+  | { type: 'START_WORKOUT'; startedAt: number }
   | { type: 'SELECT_TAB'; tab: AppState['activeTab'] }
   | { type: 'ADD_EXERCISE'; exercise: ExerciseDefinition }
+  | { type: 'SAVE_LIBRARY_EXERCISE'; exercise: ExerciseDefinition }
+  | { type: 'DELETE_LIBRARY_EXERCISE'; exerciseId: string }
   | { type: 'UPDATE_ENTRY_VALUE'; exerciseId: string; metric: MetricKey; value: number }
   | { type: 'ADD_SET'; exerciseId: string }
   | { type: 'UPDATE_SET'; exerciseId: string; setIndex: number; field: 'weight' | 'reps'; value: number }
   | { type: 'COMPLETE_SET'; exerciseId: string; setIndex: number }
-  | { type: 'COMPLETE_WORKOUT'; date: string; duration: number; session?: WorkoutSession }
-  | { type: 'UPDATE_PREFERENCES'; weeklyGoal: number }
+  | { type: 'TOGGLE_EXERCISE_COMPLETE'; exerciseId: string }
+  | { type: 'REMOVE_EXERCISE'; exerciseId: string }
+  | { type: 'COMPLETE_WORKOUT'; date: string; duration: number; calories?: number; caloriesEstimated?: boolean; session?: WorkoutSession }
+  | { type: 'UPDATE_PREFERENCES'; preferences: Partial<AppState['preferences']> }
+  | { type: 'UPSERT_WEIGHT_RECORD'; record: BodyWeightRecord }
   | { type: 'HYDRATE'; state: AppState }
 
 export function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
     case 'START_WORKOUT':
-      return { ...state, activeTab: 'training', workoutStarted: true }
+      return {
+        ...state,
+        activeTab: 'training',
+        workoutStarted: true,
+        workoutStartedAt: state.workoutStartedAt ?? action.startedAt
+      }
     case 'SELECT_TAB':
       return { ...state, activeTab: action.tab }
     case 'ADD_EXERCISE': {
@@ -29,10 +39,21 @@ export function appReducer(state: AppState, action: AppAction): AppState {
           ...action.exercise,
           ...(action.exercise.metrics.includes('sets') && action.exercise.metrics.includes('reps')
             ? { sets: [{ weight: 0, reps: 0, completed: false }] }
-            : { values: {} })
+            : { values: {}, completed: false })
         }]
       }
     }
+    case 'SAVE_LIBRARY_EXERCISE': {
+      const exists = state.exerciseLibrary.some((item) => item.id === action.exercise.id)
+      return {
+        ...state,
+        exerciseLibrary: exists
+          ? state.exerciseLibrary.map((item) => item.id === action.exercise.id ? action.exercise : item)
+          : [...state.exerciseLibrary, action.exercise]
+      }
+    }
+    case 'DELETE_LIBRARY_EXERCISE':
+      return { ...state, exerciseLibrary: state.exerciseLibrary.filter((item) => item.id !== action.exerciseId) }
     case 'UPDATE_ENTRY_VALUE':
       return { ...state, currentExercises: state.currentExercises.map((exercise) => exercise.id === action.exerciseId
         ? { ...exercise, values: { ...exercise.values, [action.metric]: sanitizeNumber(action.value) } }
@@ -49,13 +70,29 @@ export function appReducer(state: AppState, action: AppAction): AppState {
       return { ...state, currentExercises: state.currentExercises.map((exercise) => exercise.id === action.exerciseId
         ? { ...exercise, sets: (exercise.sets ?? []).map((set, index) => index === action.setIndex ? { ...set, completed: !set.completed } : set) }
         : exercise) }
+    case 'TOGGLE_EXERCISE_COMPLETE':
+      return { ...state, currentExercises: state.currentExercises.map((exercise) => exercise.id === action.exerciseId && !exercise.sets
+        ? { ...exercise, completed: !exercise.completed }
+        : exercise) }
+    case 'REMOVE_EXERCISE':
+      return { ...state, currentExercises: state.currentExercises.filter((exercise) => exercise.id !== action.exerciseId) }
     case 'COMPLETE_WORKOUT': {
-      const session = action.session ?? buildSession(state, action.date, action.duration)
+      const session = action.session ?? buildSession(state, action.date, action.duration, action.calories, action.caloriesEstimated)
       if (session.entries.length === 0) return state
-      return { ...state, activeTab: 'data', workoutStarted: false, sessions: [...state.sessions, session] }
+      return { ...state, activeTab: 'data', workoutStarted: false, workoutStartedAt: null, sessions: [...state.sessions, session] }
     }
     case 'UPDATE_PREFERENCES':
-      return { ...state, preferences: { ...state.preferences, weeklyGoal: Math.max(1, Math.round(action.weeklyGoal)) } }
+      return { ...state, preferences: {
+        ...state.preferences,
+        ...action.preferences,
+        ...(action.preferences.weeklyGoal == null ? {} : { weeklyGoal: Math.min(7, Math.max(1, Math.round(action.preferences.weeklyGoal))) })
+      } }
+    case 'UPSERT_WEIGHT_RECORD':
+      return {
+        ...state,
+        weightRecords: [...state.weightRecords.filter((item) => item.date !== action.record.date), action.record]
+          .sort((a, b) => a.date.localeCompare(b.date))
+      }
     case 'HYDRATE':
       return action.state
     default:

@@ -1,5 +1,13 @@
 export type MetricKey = 'weight' | 'reps' | 'sets' | 'duration' | 'distance'
 export type ExerciseCategory = 'strength' | 'cardio' | 'conditioning' | 'mobility' | 'custom'
+export type WeightUnit = 'kg' | 'lb'
+export type DistanceUnit = 'km' | 'mi'
+
+export interface UserPreferences {
+  weightUnit: WeightUnit
+  distanceUnit: DistanceUnit
+  weeklyGoal: number
+}
 
 export interface ExerciseDefinition {
   id: string
@@ -18,6 +26,7 @@ export interface ExerciseSet {
 export interface CurrentExercise extends ExerciseDefinition {
   sets?: ExerciseSet[]
   values?: Partial<Record<MetricKey, number>>
+  completed?: boolean
 }
 
 export interface WorkoutEntry extends ExerciseDefinition {
@@ -35,6 +44,15 @@ export interface WorkoutSession {
   date: string
   duration: number
   entries: WorkoutEntry[]
+  calories?: number
+  caloriesEstimated?: boolean
+}
+
+export interface BodyWeightRecord {
+  id: string
+  date: string
+  weightKg: number
+  updatedAt?: number
 }
 
 export interface ProjectAnalytics {
@@ -55,6 +73,7 @@ export interface AnalyticsResult {
   totalDuration: number
   totalVolume: number
   totalDistance: number
+  totalCalories: number
   averagePace: number
   projects: ProjectAnalytics[]
   trend: Array<{ date: string; volume: number; distance: number }>
@@ -63,8 +82,10 @@ export interface AnalyticsResult {
 export interface AppState {
   activeTab: 'home' | 'training' | 'data' | 'profile'
   workoutStarted: boolean
+  workoutStartedAt: number | null
   exerciseLibrary: ExerciseDefinition[]
   currentExercises: CurrentExercise[]
   sessions: WorkoutSession[]
-  preferences: { weightUnit: 'kg'; distanceUnit: 'km'; weeklyGoal: number }
+  weightRecords: BodyWeightRecord[]
+  preferences: UserPreferences
 }

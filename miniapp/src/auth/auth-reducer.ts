@@ -7,13 +7,15 @@ export interface AuthState {
   user: CloudUser | null
   error: string | null
   lastSyncAt: number | null
+  deletingAccount: boolean
 }
 
 export const initialAuthState: AuthState = {
   status: 'initializing',
   user: null,
   error: null,
-  lastSyncAt: null
+  lastSyncAt: null,
+  deletingAccount: false
 }
 
 export type AuthAction =
@@ -25,6 +27,9 @@ export type AuthAction =
   | { type: 'SYNC_OFFLINE'; error?: string }
   | { type: 'SYNC_SUCCESS'; at?: number }
   | { type: 'PROFILE_UPDATED'; user: CloudUser }
+  | { type: 'DELETE_ACCOUNT_START' }
+  | { type: 'DELETE_ACCOUNT_SUCCESS' }
+  | { type: 'DELETE_ACCOUNT_ERROR'; error: string }
 
 export function authReducer(state: AuthState, action: AuthAction): AuthState {
   switch (action.type) {
@@ -44,6 +49,12 @@ export function authReducer(state: AuthState, action: AuthAction): AuthState {
       return { ...state, status: state.user ? 'authenticated' : state.status, error: null, lastSyncAt: action.at ?? Date.now() }
     case 'PROFILE_UPDATED':
       return { ...state, user: action.user }
+    case 'DELETE_ACCOUNT_START':
+      return { ...state, deletingAccount: true, error: null }
+    case 'DELETE_ACCOUNT_SUCCESS':
+      return { ...initialAuthState, status: 'anonymous' }
+    case 'DELETE_ACCOUNT_ERROR':
+      return { ...state, deletingAccount: false, error: action.error }
     default:
       return state
   }

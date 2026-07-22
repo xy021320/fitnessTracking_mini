@@ -42,6 +42,12 @@ export function createCloudRepository(adapter: CloudAdapter): CloudRepository {
       if (existing?._id) await adapter.update('exercise_library', existing._id, { ...toExerciseDocument(exercise, now), createdAt: existing.createdAt })
       else await adapter.add('exercise_library', toExerciseDocument(exercise, now) as unknown as Record<string, unknown>)
     },
+    async deleteExercise(exerciseId) {
+      const existing = await adapter.findOne('exercise_library', { ...owner, clientExerciseId: exerciseId })
+      if (!existing?._id) return
+      const now = adapter.serverDate()
+      await adapter.update('exercise_library', existing._id, { deletedAt: now, updatedAt: now })
+    },
     async listSessions(options = {}) {
       const where: Record<string, unknown> = { ...owner, deletedAt: null }
       if (options.since) where.updatedAt = { $gt: options.since }
@@ -53,6 +59,33 @@ export function createCloudRepository(adapter: CloudAdapter): CloudRepository {
       const now = adapter.serverDate()
       if (existing?._id) await adapter.update('workout_sessions', existing._id, { ...toSessionDocument(session, now), createdAt: existing.createdAt })
       else await adapter.add('workout_sessions', toSessionDocument(session, now) as unknown as Record<string, unknown>)
+    },
+    async listWeightRecords() {
+      const docs = await listAll('body_weight_records', owner)
+      const byDate = new Map<string, { id: string; date: string; weightKg: number; updatedAt?: number }>()
+      docs.forEach((doc) => {
+        const serverUpdatedAt = doc.updatedAt instanceof Date ? doc.updatedAt.getTime() : new Date(doc.updatedAt ?? 0).getTime()
+        const record = {
+          id: doc.clientWeightId || `weight-${doc.date}`,
+          date: doc.date,
+          weightKg: Number(doc.weightKg),
+          updatedAt: Number(doc.clientUpdatedAt) || (Number.isFinite(serverUpdatedAt) ? serverUpdatedAt : undefined)
+        }
+        if (!record.date || !(record.weightKg > 0)) return
+        const existing = byDate.get(record.date)
+        if (!existing || (record.updatedAt ?? 0) > (existing.updatedAt ?? 0)) byDate.set(record.date, record)
+      })
+      return [...byDate.values()]
+    },
+    async saveWeightRecord(record) {
+      const response = await adapter.callFunction('upsertWeightRecord', { record })
+      if (!(response.result as { saved?: boolean } | undefined)?.saved) throw new Error('体重同步失败，请稍后重试')
+    },
+    async deleteUserData() {
+      const response = await adapter.callFunction('deleteUserData')
+      const result = response.result as { deleted?: boolean; warnings?: string[] } | undefined
+      if (!result?.deleted) throw new Error('个人数据删除失败，请稍后重试')
+      return { deleted: true, warnings: result.warnings ?? [] }
     }
   }
 }

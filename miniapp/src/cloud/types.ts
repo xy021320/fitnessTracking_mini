@@ -1,10 +1,10 @@
-import type { ExerciseDefinition, WorkoutSession } from '../domain/types'
+import type { BodyWeightRecord, ExerciseDefinition, UserPreferences, WorkoutSession } from '../domain/types'
 
 export interface CloudUser {
   id: string
   nickname: string
   avatarFileId: string | null
-  preferences: { weeklyGoal: number; weightUnit: 'kg'; distanceUnit: 'km' }
+  preferences: UserPreferences
   lastLoginAt?: number
 }
 
@@ -14,6 +14,8 @@ export interface SessionDocument {
   clientSessionId: string
   date: string
   duration: number
+  calories?: number
+  caloriesEstimated?: boolean
   entries: WorkoutSession['entries']
   summary: { totalVolume: number; totalDistance: number; totalReps: number; completedSets: number }
   createdAt: unknown
@@ -32,6 +34,18 @@ export interface ExerciseDocument extends ExerciseDefinition {
   schemaVersion: 1
 }
 
+export interface WeightDocument {
+  _id?: string
+  _openid?: string
+  clientWeightId: string
+  date: string
+  weightKg: number
+  clientUpdatedAt?: number
+  createdAt: unknown
+  updatedAt: unknown
+  schemaVersion: 1
+}
+
 export interface CloudAdapter {
   callFunction(name: string, data?: Record<string, unknown>): Promise<{ result?: unknown }>
   list(collection: string, where: Record<string, unknown>, options: { limit: number; skip: number; orderBy: [string, 'asc' | 'desc'] }): Promise<Record<string, any>[]>
@@ -47,6 +61,10 @@ export interface CloudRepository {
   updateProfile(userId: string, data: Partial<Pick<CloudUser, 'nickname' | 'avatarFileId' | 'preferences'>>): Promise<void>
   listExercises(options?: { since?: number }): Promise<ExerciseDefinition[]>
   saveExercise(exercise: ExerciseDefinition): Promise<void>
+  deleteExercise(exerciseId: string): Promise<void>
   listSessions(options?: { since?: number }): Promise<WorkoutSession[]>
   saveSession(session: WorkoutSession): Promise<void>
+  listWeightRecords(): Promise<BodyWeightRecord[]>
+  saveWeightRecord(record: BodyWeightRecord): Promise<void>
+  deleteUserData(): Promise<{ deleted: boolean; warnings: string[] }>
 }

@@ -11,7 +11,7 @@ export default function HomePage() {
   const now = new Date()
   const monthWeek = `${now.getMonth() + 1}月 · 第${Math.ceil(now.getDate() / 7)}周`
   const isFirstWorkout = state.sessions.length === 0
-  const start = () => { dispatch({ type: 'START_WORKOUT' }); Taro.switchTab({ url: '/pages/training/index' }) }
+  const start = () => { dispatch({ type: 'START_WORKOUT', startedAt: Date.now() }); Taro.switchTab({ url: '/pages/training/index' }) }
   return <AuthGate><View className='home-page'><View className='brand-row'><Text className='brand'>铸力</Text><Text className='date'>{monthWeek}</Text></View>
     <View className='hero'><Text className='hero-kicker'>{isFirstWorkout ? '从今天开始' : '今天，继续变强'}</Text><Text className='hero-title'>{isFirstWorkout ? '建立你的训练记录' : '准备好下一次训练'}</Text><Text className='hero-copy'>{isFirstWorkout ? '添加任意项目，完成后自动生成训练统计' : '力量 · 有氧 · 自定义项目'}</Text><Button onClick={start}>{isFirstWorkout ? '开始第一次训练' : '开始训练'} <Text>→</Text></Button></View>
     <View className='week-row'><View><Text className='section-label'>本周目标</Text><Text className='week-number'>{Math.min(data.sessionCount, state.preferences.weeklyGoal)} / {state.preferences.weeklyGoal}</Text></View><View className='week-bars'>{[0,1,2,3].map((item) => <Text className={item < Math.min(data.sessionCount, 4) ? 'active' : ''} key={item} />)}</View></View>

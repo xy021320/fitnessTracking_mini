@@ -5,6 +5,7 @@ const USER_STORAGE_PREFIX = 'zhu-li-user-state-v1:'
 
 interface StorageReader { getStorageSync: (key: string) => unknown }
 interface StorageWriter { setStorageSync: (key: string, value: unknown) => void }
+interface StorageRemover { removeStorageSync: (key: string) => void }
 
 function isAppState(value: unknown): value is AppState {
   if (!value || typeof value !== 'object') return false
@@ -43,5 +44,15 @@ export function saveUserState(storage: StorageWriter, userId: string, state: App
     storage.setStorageSync(`${USER_STORAGE_PREFIX}${userId}`, state)
   } catch {
     // Cloud sync remains the source of truth when local storage is unavailable.
+  }
+}
+
+export function clearUserStorage(storage: StorageRemover, userId: string): void {
+  for (const key of [
+    `${USER_STORAGE_PREFIX}${userId}`,
+    `zhu-li-pending-sync-v1:${userId}`,
+    'zhu-li-privacy-consent-v1'
+  ]) {
+    try { storage.removeStorageSync(key) } catch { /* Continue clearing the remaining user-scoped keys. */ }
   }
 }

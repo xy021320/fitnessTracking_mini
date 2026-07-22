@@ -1,20 +1,25 @@
 import { sanitizeNumber } from './exercises'
-import type { AnalyticsResult, ProjectAnalytics, WorkoutEntry, WorkoutSession } from './types'
+import { estimateCalories, weightForDate } from './calories'
+import type { AnalyticsResult, BodyWeightRecord, ProjectAnalytics, WorkoutEntry, WorkoutSession } from './types'
 
 function strengthVolume(entry: WorkoutEntry) {
   return (entry.sets ?? []).reduce((sum, set) => set.completed ? sum + sanitizeNumber(set.weight) * sanitizeNumber(set.reps) : sum, 0)
 }
 
-export function deriveAnalytics(sessions: WorkoutSession[]): AnalyticsResult {
+export function deriveAnalytics(sessions: WorkoutSession[], weightRecords: BodyWeightRecord[] = []): AnalyticsResult {
   const projects = new Map<string, ProjectAnalytics>()
   let totalDuration = 0
   let totalVolume = 0
   let totalDistance = 0
   let cardioDuration = 0
+  let totalCalories = 0
   const trend = sessions.map((session) => {
     let volume = 0
     let distance = 0
     totalDuration += sanitizeNumber(session.duration)
+    totalCalories += session.calories == null
+      ? estimateCalories({ duration: session.duration, weightKg: weightForDate(weightRecords, session.date).weightKg, entries: session.entries })
+      : sanitizeNumber(session.calories)
     session.entries.forEach((entry) => {
       const entryVolume = strengthVolume(entry)
       const entryDistance = entry.completed === false ? 0 : sanitizeNumber(entry.distance)
@@ -43,7 +48,7 @@ export function deriveAnalytics(sessions: WorkoutSession[]): AnalyticsResult {
     return { date: session.date.slice(5).replace('-', '/'), volume, distance }
   })
   return {
-    sessionCount: sessions.length, totalDuration, totalVolume, totalDistance,
+    sessionCount: sessions.length, totalDuration, totalVolume, totalDistance, totalCalories,
     averagePace: totalDistance > 0 ? cardioDuration / totalDistance : 0,
     projects: [...projects.values()].sort((a, b) => (b.volume + b.distance + b.reps) - (a.volume + a.distance + a.reps)),
     trend: trend.sort((a, b) => a.date.localeCompare(b.date))
