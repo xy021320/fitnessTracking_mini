@@ -32,3 +32,8 @@ test('privacy checks and official contract entry are enabled', () => {
   assert.match(gate, /agreePrivacyAuthorization/)
   assert.match(gate, /请先阅读并同意隐私保护指引/)
 })
+
+test('component code is injected on demand', () => {
+  const config = readFileSync(new URL('../src/app.config.ts', import.meta.url), 'utf8')
+  assert.match(config, /lazyCodeLoading:\s*['"]requiredComponents['"]/)
+})
