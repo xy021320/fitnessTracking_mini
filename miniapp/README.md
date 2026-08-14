@@ -7,8 +7,8 @@
 代码和云函数已经准备好，但云环境属于你的微信账号资源，需要在微信开发者工具中开通。建议先使用个人版免费试用，并确认未开启自动续费。
 
 1. 在微信开发者工具打开本项目，点击顶部“云开发”，选择“开通”，创建一个环境并等待初始化完成。
-2. 进入云开发控制台 → 数据库，创建三个集合：`users`、`exercise_library`、`workout_sessions`。三个集合的权限均选择“仅创建者可读写”。仓库中的 `cloud/database-rules.json` 和 `cloud/database-indexes.json` 是自定义权限与组合索引参考。
-3. 回到代码区，展开 `cloudfunctions`，右键 `bootstrapUser`，选择“上传并部署：云端安装依赖”。部署完成后点击顶部“编译”。
+2. 进入云开发控制台 → 数据库，创建四个集合：`users`、`exercise_library`、`workout_sessions`、`body_weight_records`。四个集合的权限均选择“仅创建者可读写”。仓库中的 `cloud/database-rules.json` 和 `cloud/database-indexes.json` 是自定义权限与组合索引参考。
+3. 回到代码区，展开 `cloudfunctions`，分别右键 `bootstrapUser`、`upsertWeightRecord`、`deleteUserData`、`contentSecurityCheck`，选择“上传并部署：云端安装依赖”。部署完成后点击顶部“编译”。
 4. 点击“预览”，手机扫码后点击“微信登录”。首次登录会在 `users` 中生成一条本人记录；完成一次训练后会在 `workout_sessions` 中生成记录。
 
 截至 2026-07-13，腾讯云官方说明首次使用 CloudBase 可免费试用 1 个月个人版，后续个人版参考价为 19.9 元/月。计费规则可能调整，开通时请以控制台订单页为准，并保持自动续费关闭。云端到期或断网时，新的训练仍会先保存在本机并进入待同步队列。
@@ -57,5 +57,6 @@ npm test
 
 - 新微信用户从空训练记录开始，不会上传原型演示数据。
 - 完成训练和新增自定义项目后自动同步；重量、次数、组数、时长、距离可自由组合。
+- 保存自定义项目、昵称和头像前，会通过 `contentSecurityCheck` 云函数调用微信内容安全能力。
 - 云端写入失败时先保存本机，下次打开或网络恢复时重试。
 - 本地缓存与待同步队列均按微信云用户隔离，不会串用其他体验成员的数据。

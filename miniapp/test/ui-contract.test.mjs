@@ -19,11 +19,21 @@ test('four confirmed pages expose their primary content', () => {
 
 test('login gate and first-training empty state are present', () => {
   const auth = read('src/components/auth-gate/index.tsx')
+  const home = read('src/pages/home/index.tsx')
   assert.match(auth, /微信登录/)
   assert.match(auth, /训练数据仅本人可见/)
   assert.match(auth, /重新尝试/)
-  assert.match(read('src/pages/home/index.tsx'), /开始第一次训练/)
-  assert.doesNotMatch(read('src/pages/home/index.tsx'), /7月 · 第3周/)
+  assert.match(home, /开始第一次训练/)
+  assert.match(home, /先浏览功能/)
+  assert.doesNotMatch(home, /<AuthGate>/)
+  assert.doesNotMatch(home, /7月 · 第3周/)
+})
+
+test('user generated content is checked before saving', () => {
+  assert.match(read('src/components/add-exercise-sheet/index.tsx'), /checkTextSecurity/)
+  assert.match(read('src/components/exercise-editor/index.tsx'), /checkTextSecurity/)
+  assert.match(read('src/components/profile-editor/index.tsx'), /checkTextSecurity/)
+  assert.match(read('src/components/profile-editor/index.tsx'), /checkImageSecurity/)
 })
 
 test('training actions are safe-area fixed and exercises are removable', () => {

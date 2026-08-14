@@ -1,6 +1,7 @@
 import Taro from '@tarojs/taro'
 import { Button, Image, Input, Text, View } from '@tarojs/components'
 import { useEffect, useState } from 'react'
+import { checkImageSecurity, checkTextSecurity } from '../../cloud/security'
 import type { CloudUser } from '../../cloud/types'
 import './index.scss'
 
@@ -32,6 +33,7 @@ export default function ProfileEditor({ open, user, onClose, onSave }: ProfileEd
     setSaving(true)
     setError('')
     try {
+      await checkTextSecurity(cleanName)
       let avatarFileId = user.avatarFileId
       if (avatarUrl && avatarUrl !== user.avatarFileId) {
         const extension = avatarUrl.match(/\.[a-zA-Z0-9]+(?=$|\?)/)?.[0] ?? '.png'
@@ -40,6 +42,12 @@ export default function ProfileEditor({ open, user, onClose, onSave }: ProfileEd
           filePath: avatarUrl
         })
         avatarFileId = upload.fileID
+        try {
+          await checkImageSecurity(avatarFileId)
+        } catch (reason) {
+          await Taro.cloud.deleteFile({ fileList: [avatarFileId] }).catch(() => undefined)
+          throw reason
+        }
       }
       await onSave({ nickname: cleanName, avatarFileId })
       onClose()

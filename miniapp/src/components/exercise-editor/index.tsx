@@ -1,5 +1,6 @@
 import { Button, Input, Text, View } from '@tarojs/components'
 import { useEffect, useState } from 'react'
+import { checkTextSecurity } from '../../cloud/security'
 import { createExercise, metricLabels } from '../../domain/exercises'
 import type { ExerciseDefinition, MetricKey } from '../../domain/types'
 import './index.scss'
@@ -10,13 +11,14 @@ interface ExerciseEditorProps {
   open: boolean
   exercise: ExerciseDefinition | null
   onClose: () => void
-  onSave: (exercise: ExerciseDefinition) => void
+  onSave: (exercise: ExerciseDefinition) => void | Promise<void>
 }
 
 export default function ExerciseEditor({ open, exercise, onClose, onSave }: ExerciseEditorProps) {
   const [name, setName] = useState('')
   const [metrics, setMetrics] = useState<MetricKey[]>([])
   const [error, setError] = useState('')
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     if (!open) return
@@ -28,12 +30,17 @@ export default function ExerciseEditor({ open, exercise, onClose, onSave }: Exer
   if (!open) return null
 
   const toggleMetric = (metric: MetricKey) => setMetrics((current) => current.includes(metric) ? current.filter((item) => item !== metric) : [...current, metric])
-  const save = () => {
+  const save = async () => {
+    setSaving(true)
     try {
-      onSave(createExercise({ id: exercise?.id, name, metrics, category: 'custom', custom: true }))
+      const nextExercise = createExercise({ id: exercise?.id, name, metrics, category: 'custom', custom: true })
+      await checkTextSecurity(nextExercise.name)
+      await onSave(nextExercise)
       onClose()
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : '项目保存失败')
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -46,6 +53,6 @@ export default function ExerciseEditor({ open, exercise, onClose, onSave }: Exer
     <View className='exercise-metrics'>{metricOptions.map((metric) => <Text key={metric} className={metrics.includes(metric) ? 'selected' : ''} onClick={() => toggleMetric(metric)}>{metricLabels[metric]}</Text>)}</View>
     <Text className='exercise-editor-tip'>需要按组记录时，可组合选择重量、次数和组数。</Text>
     {error && <Text className='exercise-editor-error'>{error}</Text>}
-    <Button className='exercise-editor-save' onClick={save}>保存项目</Button>
+    <Button className='exercise-editor-save' loading={saving} disabled={saving} onClick={() => void save()}>{saving ? '校验中…' : '保存项目'}</Button>
   </View></View>
 }
